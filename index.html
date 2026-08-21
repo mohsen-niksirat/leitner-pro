@@ -7851,7 +7851,7 @@ document.querySelectorAll('[data-cat-delete]').forEach(function(btn){
 // ═══════════════════════════════════════════
 let engQuizLoaded=false;
 function renderEngQuiz(c){
-  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون واژگان و گرامر انگلیسی</p></div><iframe class="eng-quiz-frame" src="https://mohsen-niksirat.github.io/EnglishQuizBeta/" allow="microphone" title="English Quiz" id="engQuizFrame"></iframe>`;
+  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون واژگان و گرامر انگلیسی</p></div><iframe class="eng-quiz-frame" src="https://english-quiz-beta.pages.dev/" allow="microphone" title="English Quiz" id="engQuizFrame"></iframe>`;
   const frame=document.getElementById('engQuizFrame');
   if(frame){
     frame.onload=()=>{
