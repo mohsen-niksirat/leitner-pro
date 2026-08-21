@@ -2623,7 +2623,7 @@ return`<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12p
     <div id="custom-pack-status" style="margin-top:8px;font-size:.82rem"></div>
   </div>
 </div>
-<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div><div class="card" style="margin-bottom:16px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(162,155,254,.05))"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span style="font-size:1.8rem">⚒️</span><div><h3 style="color:var(--accent);margin-bottom:2px">VocabForge — سازنده فلشکارت</h3><p style="font-size:.82rem;color:var(--text2)">کلمات را از PDF/DOCX استخراج، غنیسازی و ترجمه کنید و مستقیماً به لایتنر وارد کنید.</p></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://niksiratforex-ux.github.io/VocabForge/" target="_blank" class="btn btn-primary btn-sm">🌐 باز کردن VocabForge</a><span style="font-size:.78rem;color:var(--text2);display:flex;align-items:center">فایل JSON خروجی VocabForge را اینجا وارد کنید</span></div></div>`}
+<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div><div class="card" style="margin-bottom:16px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(162,155,254,.05))"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span style="font-size:1.8rem">⚒️</span><div><h3 style="color:var(--accent);margin-bottom:2px">VocabForge — سازنده فلشکارت</h3><p style="font-size:.82rem;color:var(--text2)">کلمات را از PDF/DOCX استخراج، غنیسازی و ترجمه کنید و مستقیماً به لایتنر وارد کنید.</p></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://mohsen-niksirat.github.io/VocabForge/" target="_blank" class="btn btn-primary btn-sm">🌐 باز کردن VocabForge</a><span style="font-size:.78rem;color:var(--text2);display:flex;align-items:center">فایل JSON خروجی VocabForge را اینجا وارد کنید</span></div></div>`}
 
 function renderSelectableTextSection(){
 if(!textRenderedWords.length){
@@ -7851,7 +7851,7 @@ document.querySelectorAll('[data-cat-delete]').forEach(function(btn){
 // ═══════════════════════════════════════════
 let engQuizLoaded=false;
 function renderEngQuiz(c){
-  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون واژگان و گرامر انگلیسی</p></div><iframe class="eng-quiz-frame" src="https://niksiratforex-ux.github.io/english-quiz-beta/" allow="microphone" title="English Quiz" id="engQuizFrame"></iframe>`;
+  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون واژگان و گرامر انگلیسی</p></div><iframe class="eng-quiz-frame" src="https://mohsen-niksirat.github.io/EnglishQuizBeta/" allow="microphone" title="English Quiz" id="engQuizFrame"></iframe>`;
   const frame=document.getElementById('engQuizFrame');
   if(frame){
     frame.onload=()=>{
@@ -8866,9 +8866,9 @@ c.innerHTML=`<div style="max-width:700px;margin:0 auto">
         <span style="font-size:1.3rem">💬</span>
         <div><div style="font-weight:600;font-size:.9rem">تلگرام</div><div style="font-size:.75rem;color:var(--text2)">@MyLeitner</div></div>
       </a>
-      <a href="https://github.com/niksiratforex-ux/litreader" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;color:var(--text);text-decoration:none;transition:all .2s">
+      <a href="https://github.com/mohsen-niksirat/leitner-pro" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;color:var(--text);text-decoration:none;transition:all .2s">
         <span style="font-size:1.3rem">💻</span>
-        <div><div style="font-weight:600;font-size:.9rem">گیت‌هاب</div><div style="font-size:.75rem;color:var(--text2)">github.com/niksiratforex-ux/litreader</div></div>
+        <div><div style="font-weight:600;font-size:.9rem">گیت‌هاب</div><div style="font-size:.75rem;color:var(--text2)">github.com/mohsen-niksirat/leitner-pro</div></div>
       </a>
     </div>
   </div>
@@ -8980,15 +8980,15 @@ if ('serviceWorker' in navigator) {
 //  DOWNLOAD PACKS MODULE
 // ═══════════════════════════════════════════
 const READY_PACKS = [
-  {id:'504',name:'📚 504 کلمه ضروری',desc:'کتاب 504 Absolutely Essential Words — ۴۲ درس',count:504,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/504words.json',category:'504'},
-  {id:'ielts',name:'🎓 آیلتس',desc:'واژگان ضروری آیلتس',count:108,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/ielts.json',category:'آیلتس'},
-  {id:'toefl',name:'🎓 تافل',desc:'واژگان ضروری تافل',count:107,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/toefl.json',category:'تافل'},
-  {id:'computer',name:'💻 کامپیوتر',desc:'واژگان تخصصی فناوری',count:101,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/computer.json',category:'کامپیوتر'},
-  {id:'gre',name:'📚 GRE',desc:'واژگان پیشرفته GRE',count:80,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/gre.json',category:'GRE'},
-  {id:'daily',name:'💬 مکالمه',desc:'عبارات کاربردی روزمره',count:80,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/daily.json',category:'مکالمه'},
-  {id:'academic',name:'🎓 آکادمیک',desc:'واژگان متون علمی',count:80,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/academic.json',category:'آکادمیک'},
-  {id:'medical',name:'🏥 پزشکی',desc:'واژگان پزشکی و سلامت',count:60,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/medical.json',category:'پزشکی'},
-  {id:'business',name:'💼 بیزنس',desc:'واژگان بازرگانی',count:60,url:'https://raw.githubusercontent.com/niksiratforex-ux/leitner-mobile/main/packs/business.json',category:'بیزنس'}
+  {id:'504',name:'📚 504 کلمه ضروری',desc:'کتاب 504 Absolutely Essential Words — ۴۲ درس',count:504,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/504words.json',category:'504'},
+  {id:'ielts',name:'🎓 آیلتس',desc:'واژگان ضروری آیلتس',count:108,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/ielts.json',category:'آیلتس'},
+  {id:'toefl',name:'🎓 تافل',desc:'واژگان ضروری تافل',count:107,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/toefl.json',category:'تافل'},
+  {id:'computer',name:'💻 کامپیوتر',desc:'واژگان تخصصی فناوری',count:101,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/computer.json',category:'کامپیوتر'},
+  {id:'gre',name:'📚 GRE',desc:'واژگان پیشرفته GRE',count:80,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/gre.json',category:'GRE'},
+  {id:'daily',name:'💬 مکالمه',desc:'عبارات کاربردی روزمره',count:80,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/daily.json',category:'مکالمه'},
+  {id:'academic',name:'🎓 آکادمیک',desc:'واژگان متون علمی',count:80,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/academic.json',category:'آکادمیک'},
+  {id:'medical',name:'🏥 پزشکی',desc:'واژگان پزشکی و سلامت',count:60,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/medical.json',category:'پزشکی'},
+  {id:'business',name:'💼 بیزنس',desc:'واژگان بازرگانی',count:60,url:'https://raw.githubusercontent.com/mohsen-niksirat/Leitner_Mobile/main/packs/business.json',category:'بیزنس'}
 ];
 
 function renderPacksGrid(){
