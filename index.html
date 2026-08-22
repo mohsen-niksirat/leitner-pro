@@ -7904,7 +7904,7 @@ document.querySelectorAll('[data-cat-delete]').forEach(function(btn){
 // ═══════════════════════════════════════════
 let engQuizLoaded=false;
 function renderEngQuiz(c){
-  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون واژگان و گرامر انگلیسی</p></div><iframe class="eng-quiz-frame" src="https://english-quiz-beta.pages.dev/" allow="microphone" title="English Quiz" id="engQuizFrame"></iframe>`;
+  c.innerHTML=`<div style="text-align:center;margin-bottom:16px"><p style="color:var(--text2);font-size:.9rem">آزمون تعیین سطح انگلیسی — واژگان، گرامر، لیسنینگ و رایتینگ</p><a href="https://mohsen-niksirat.github.io/EnglishQuiz/" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,var(--accent),#7c6cf0);color:#fff;border-radius:10px;font-size:.85rem;font-weight:600;text-decoration:none">🎯 باز کردن در صفحه جدید</a></div><iframe class="eng-quiz-frame" src="https://mohsen-niksirat.github.io/EnglishQuiz/" allow="microphone" title="English Level Test" id="engQuizFrame"></iframe>`;
   const frame=document.getElementById('engQuizFrame');
   if(frame){
     frame.onload=()=>{
@@ -8832,7 +8832,7 @@ c.innerHTML=`<div style="max-width:700px;margin:0 auto">
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">📄 خواننده PDF با پاپ‌آپ ترجمه خودکار</div>
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🌐 ترجمه خودکار با ۱۳ زبان و فرهنگ لغت</div>
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🎮 آزمون هوشمند ۸ حالتی با به‌روزرسانی خودکار لایتنر</div>
-      <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🎯 تعیین سطح با ارتباط مستقیم با لایتنر</div>
+      <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🎯 تعیین سطح انگلیسی (CEFR) — <a href="https://mohsen-niksirat.github.io/EnglishQuiz/" target="_blank" style="color:var(--accent)">باز کردن</a></div>
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">⚡ مرور سریع تایم‌دار</div>
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🎧 تمرین شنیداری (املاء)</div>
       <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:.85rem">🗺️ نقشه ذهنی واژگان</div>
