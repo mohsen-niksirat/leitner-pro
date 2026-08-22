@@ -1,10 +1,10 @@
-<!-- v4.0 -->
+<!-- v3.8.3 -->
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" data-theme="dark">
 <head> 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>برنامه مرور لایتنر — نسخه ۴.۰</title>
+<title>برنامه مرور لایتنر — نسخه ۳.۸.۳</title>
 <!-- ═══ PWA ═══ -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -602,34 +602,6 @@ function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/<
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function fmtDate(d){if(!d)return'-';return new Date(d).toLocaleDateString('fa-IR')}
 function todayKey(){return new Date().toISOString().slice(0,10)}
-
-// ═══════════════════════════════════════════
-// ERROR BOUNDARY HELPER
-// ═══════════════════════════════════════════
-function withErrorBoundary(fn, fallback) {
-  return function() {
-    try {
-      return fn.apply(this, arguments);
-    } catch (err) {
-      console.error('[ErrorBoundary]', err);
-      if (typeof toast === 'function') {
-        toast('خطا در اجرای بخش: ' + (err.message || 'ناشناخته'), 'error');
-      }
-      if (fallback) {
-        try {
-          return fallback.apply(this, arguments);
-        } catch (e2) {
-          console.error('[ErrorBoundary fallback]', e2);
-        }
-      }
-      // Return minimal safe HTML
-      var c = arguments[0];
-      if (c && c.innerHTML !== undefined) {
-        c.innerHTML = '<div class="card" style="text-align:center;padding:40px"><div class="empty"><div class="icon">⚠️</div><p>خطا در نمایش این بخش</p><p style="font-size:.8rem;color:var(--text2);margin-top:8px">' + esc(err.message || '') + '</p><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="location.reload()">بازنشانی صفحه</button></div></div>';
-      }
-    }
-  };
-}
 
 // ═══════════════════════════════════════════
 // CARD FACTORY
@@ -1400,7 +1372,6 @@ function positionTransPopup(rect){
   p.style.top=top+'px';p.style.left=left+'px'}
 
 async function renderTransPopup(word,rect){
-  try{
   let popup=document.getElementById('transPopup');
   if(!popup){popup=document.createElement('div');popup.id='transPopup';popup.className='pdf-trans-popup';document.body.appendChild(popup)}
 
@@ -1492,16 +1463,6 @@ async function renderTransPopup(word,rect){
     const addBtn=document.getElementById('transAddBtn');
     if(addBtn){addBtn.disabled=true;addBtn.textContent='✅ در کتابخانه موجود است'}
   }
-  }catch(err){
-    console.error('[TransPopup Error]',err);
-    toast('خطا در ترجمه: '+(err.message||'ناشناخته'),'error');
-    var popup=document.getElementById('transPopup');
-    if(popup){
-      popup.innerHTML='<button type="button" class="trans-close" id="transClose">&times;</button>'
-        +'<div class="trans-error">خطا در دریافت ترجمه<br><small>'+esc(err.message||'')+'</small></div>';
-      document.getElementById('transClose').onclick=hideTransPopup;
-    }
-  }
 }
 
 // ═══════════════════════════════════════════
@@ -1552,7 +1513,6 @@ html+='</div>';
 nav.innerHTML=html;
 nav.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{if(currentTab==='quiz'&&b.dataset.tab!=='quiz')finalizeQuizSession();currentTab=b.dataset.tab;render();if(!S.settings.sidebarLocked){document.getElementById('sidebar').classList.remove('open');document.getElementById('main').className='main sidebar-closed'}})}
 function render(){
-try{
 if(currentTab!=='review'&&currentTab!=='pdfreader')document.onkeydown=null;
 if(currentTab!=='pdfreader')hideTransPopup();
 // Stop auto-play when leaving review
@@ -1572,20 +1532,7 @@ const dueBadge=getDue().length;
 document.title=dueBadge>0?'('+dueBadge+') لایتنر — '+titles[currentTab]:'لایتنر — مرور هوشمند';
 const c=document.getElementById('content');
 const renders={review:renderReview,library:renderLibrary,longterm:renderLongterm,import:(_stagedImportCards.length?renderStagedImport:renderImport),reading:renderReading,pdfreader:renderPDFReader,wordweb:renderWordWeb,export:renderExport,stats:renderStats,quiz:renderQuiz,engquiz:renderEngQuiz,aichat:renderAiChat,settings:renderSettings,about:renderAbout};
-const _renderFn=renders[currentTab];
-if(_renderFn){
-  try{_renderFn(c)}catch(err){
-    console.error('[Tab Render Error]',currentTab,err);
-    toast('خطا در نمایش «'+(titles[currentTab]||currentTab)+'»: '+(err.message||''),'error');
-    c.innerHTML='<div class="card" style="text-align:center;padding:40px"><div class="empty"><div class="icon">⚠️</div><p>خطا در نمایش این بخش</p><p style="font-size:.8rem;color:var(--text2);margin-top:8px">'+esc(err.message||'')+'</p><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="location.reload()">بازنشانی صفحه</button></div></div>';
-  }
-}
-}catch(err){
-console.error('[Render Error]',err);
-toast('خطا در نمایش صفحه: '+(err.message||'ناشناخته'),'error');
-var _rc=document.getElementById('content');
-if(_rc)_rc.innerHTML='<div class="card" style="text-align:center;padding:40px"><div class="empty"><div class="icon">⚠️</div><p>خطا در نمایش این بخش</p><p style="font-size:.8rem;color:var(--text2);margin-top:8px">'+esc(err.message||'')+'</p><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="location.reload()">بازنشانی صفحه</button></div></div>';
-}}
+(renders[currentTab]||(()=>''))(c)}
 
 // ═══════════════════════════════════════════
 // 1. REVIEW (with FSRS + edit in review)
@@ -8762,30 +8709,12 @@ c.innerHTML=`<div style="max-width:700px;margin:0 auto">
   <div style="text-align:center;background:linear-gradient(135deg,var(--accent),#764ba2);color:#fff;padding:48px 32px;border-radius:20px;margin-bottom:28px;box-shadow:0 16px 48px rgba(108,92,231,.35)">
     <div style="font-size:3.5rem;margin-bottom:14px">📚</div>
     <h2 style="font-size:2rem;margin-bottom:10px;font-weight:800">برنامه مرور هوشمند واژگان لایتنر</h2>
-    <p style="opacity:.95;font-size:1.05rem;font-weight:500">نسخه 4.0 - Leitner Pro</p>
+    <p style="opacity:.95;font-size:1.05rem;font-weight:500">نسخه 3.8.3 - Leitner Pro</p>
     <p style="opacity:.8;font-size:.9rem;margin-top:6px">الگوریتم: FSRS (Free Spaced Repetition Scheduler)</p>
   </div>
 
   <div class="card" style="margin-bottom:16px;border:2px solid var(--accent)">
-    <h3 style="margin-bottom:12px;color:var(--accent)">🆕 ویژگی‌های جدید نسخه ۴.۰</h3>
-    <div style="display:grid;gap:8px;margin-bottom:16px">
-      <div style="padding:10px 14px;background:var(--bg);border-radius:8px;border-right:3px solid var(--success)">
-        <strong style="font-size:.9rem">🛡️ Error Boundary</strong>
-        <p style="color:var(--text2);font-size:.8rem;margin-top:4px">محافظت در برابر خطاها — اگر هر بخشی از برنامه خطا بده، فقط همون بخش متوقف میشه و بقیه سالم میمونه. پیام خطای فارسی و دکمه بازنشانی.</p>
-      </div>
-      <div style="padding:10px 14px;background:var(--bg);border-radius:8px;border-right:3px solid var(--success)">
-        <strong style="font-size:.9rem">📦 Minification</strong>
-        <p style="color:var(--text2);font-size:.8rem;margin-top:4px">فشرده‌سازی CSS و JS — کاهش ۲۱٪ حجم فایل. اسکریپت build خودکار با npm run build.</p>
-      </div>
-      <div style="padding:10px 14px;background:var(--bg);border-radius:8px;border-right:3px solid var(--success)">
-        <strong style="font-size:.9rem">🔧 GitHub Actions</strong>
-        <p style="color:var(--text2);font-size:.8rem;margin-top:4px">build خودکار نسخه minified هر بار push. deployment به GitHub Pages.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px;border:2px solid var(--accent)">
-    <h3 style="margin-bottom:12px;color:var(--accent)">📋 ویژگی‌های نسخه ۳.۸.۳</h3>
+    <h3 style="margin-bottom:12px;color:var(--accent)">🆕 ویژگی‌های جدید نسخه ۳.۸.۳</h3>
     <div style="display:grid;gap:8px;margin-bottom:16px">
       <div style="padding:10px 14px;background:var(--bg);border-radius:8px;border-right:3px solid var(--success)">
         <strong style="font-size:.9rem">💾 ذخیره‌سازی IndexedDB</strong>
