@@ -996,6 +996,7 @@ async function translateCards(list){
 // ═══════════════════════════════════════════
 // EXPORT TAB — exact Leitner format
 // ═══════════════════════════════════════════
+const LEITNER_PENDING_KEY='leitner_pending_import';
 function renderExport(c){
   const complete=cards.filter(c=>c.definitions.length);
   c.innerHTML=`
@@ -1004,47 +1005,97 @@ function renderExport(c){
     <div class="stat-card"><div class="val" style="color:var(--success)">${complete.length}</div><div class="lbl">آماده خروجی</div></div>
   </div>
   <div class="card" style="border:1px solid var(--accent)">
-    <h3 style="margin-bottom:12px;color:var(--accent)">💾 خروجی JSON برای لایتنر</h3>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">فایل JSON مستقیماً وارد بخش «ورود کلمات» لایتنر کنید.</p>
-    <div style="margin-bottom:10px">
-      <label style="font-size:.82rem;font-weight:600">نام دسته:</label>
-      <input class="input" id="expCategory" value="VocabForge" style="max-width:220px;margin-top:3px">
+    <h3 style="margin-bottom:12px;color:var(--accent)">📤 انتقال به لایتنر پرو</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px">کلمات را از لیست زیر انتخاب کنید (یک‌به‌یک یا چندتایی) و مقصد را مشخص کنید. با یک دکمه به لایتنر پرو منتقل می‌شوند.</p>
+    <div class="filter-bar">
+      <input class="input" placeholder="🔍 جستجو..." id="sendFilter" style="max-width:180px">
+      <button class="btn btn-sm btn-ghost" id="sendSelAll">انتخاب همه</button>
+      <button class="btn btn-sm btn-ghost" id="sendDeselAll">لغو همه</button>
+      <button class="btn btn-sm btn-ghost" id="sendSelDone">فقط غنی‌شده</button>
+      <select class="input" id="expDest" style="max-width:180px">
+        <option value="words">📚 کتابخانه لایتنر</option>
+        <option value="longTerm">🧠 حافظه بلندمدت</option>
+      </select>
+      <input class="input" id="expCategory" value="VocabForge" style="max-width:140px" title="نام دسته">
+      <span style="color:var(--text2);font-size:.78rem" id="sendCount"></span>
     </div>
+    <div id="sendList" style="max-height:46vh;overflow-y:auto;background:var(--bg);border-radius:12px;padding:8px;margin-bottom:12px;border:1px solid var(--border)"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary" id="expSend">📤 ارسال مستقیم به لایتنر</button>
-      <button class="btn btn-success" id="expDownload">📥 دانلود JSON</button>
+      <button class="btn btn-primary" id="expSend">📤 ارسال انتخاب‌شده به لایتنر (<span id="sendBtnCount">0</span>)</button>
+      <button class="btn btn-success" id="expDownload">📥 دانلود همه به‌صورت JSON</button>
       <button class="btn btn-ghost" id="expCopy">📋 کپی JSON</button>
     </div>
     <div id="expSendHint" style="margin-top:8px;font-size:.76rem;color:var(--text2);display:none"></div>
   </div>
   <div class="card">
-    <h3 style="margin-bottom:10px">👁 پیش‌نمایش</h3>
-    <pre style="background:var(--bg);padding:12px;border-radius:10px;font-size:.74rem;max-height:350px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap" id="jsonPreview"></pre>
+    <h3 style="margin-bottom:10px">👁 پیش‌نمایش JSON</h3>
+    <pre style="background:var(--bg);padding:12px;border-radius:10px;font-size:.74rem;max-height:300px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap" id="jsonPreview"></pre>
   </div>`;
+
+  // لیست انتخاب‌پذیر
+  let selFilter='';
+  function filteredList(){
+    const f=selFilter.toLowerCase();
+    return cards.filter(c=>!f||c.word.toLowerCase().includes(f)||(c.translation||'').toLowerCase().includes(f));
+  }
+  function refreshSendList(){
+    const list=filteredList();
+    const el=document.getElementById('sendList');
+    if(!list.length){el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2);font-size:.82rem">کارتی یافت نشد</div>';updateSendCount();return}
+    el.innerHTML=list.map((w)=>{
+      const idx=cards.indexOf(w);
+      return `<label class="card-item" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:5px">
+        <input type="checkbox" data-idx="${idx}" ${w._sel?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:700;color:var(--accent);font-size:.9rem">${esc(w.word)}</span>${w.partOfSpeech?`<span class="pos">${esc(w.partOfSpeech)}</span>`:''}
+          <div style="font-size:.78rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.translation||(w.definitions[0]||'—'))}</div>
+        </div>
+        ${!w.definitions.length?`<span class="badge badge-warning" style="font-size:.6rem;flex-shrink:0">ناقص</span>`:''}
+      </label>`;
+    }).join('');
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+      cb.onchange=()=>{cards[parseInt(cb.dataset.idx)]._sel=cb.checked;updateSendCount()};
+    });
+    updateSendCount();
+  }
+  function updateSendCount(){
+    const sel=cards.filter(c=>c._sel).length;
+    const cntEl=document.getElementById('sendCount');
+    if(cntEl)cntEl.textContent=sel+' انتخاب شده';
+    const btn=document.getElementById('sendBtnCount');
+    if(btn)btn.textContent=sel;
+  }
+  refreshSendList();
+  document.getElementById('sendFilter').oninput=e=>{selFilter=e.target.value;refreshSendList()};
+  document.getElementById('sendSelAll').onclick=()=>{filteredList().forEach(w=>w._sel=true);refreshSendList()};
+  document.getElementById('sendDeselAll').onclick=()=>{cards.forEach(w=>w._sel=false);refreshSendList()};
+  document.getElementById('sendSelDone').onclick=()=>{cards.forEach(w=>w._sel=!!w.definitions.length);refreshSendList()};
+
   updatePreview();
-  document.getElementById('expCategory').onchange=updatePreview;
+  document.getElementById('expCategory')?.addEventListener('change',updatePreview);
   document.getElementById('expDownload').onclick=downloadJSON;
   document.getElementById('expCopy').onclick=()=>{navigator.clipboard.writeText(getExportJSON());toast('کپی شد','success')};
   const sendBtn=document.getElementById('expSend');
   if(sendBtn)sendBtn.onclick=()=>{
-    const complete=cards.filter(c=>c.definitions.length);
-    if(!complete.length){toast('اول کارت‌ها را غنی‌سازی کنید','error');return}
+    const selected=cards.filter(c=>c._sel);
+    if(!selected.length){toast('کلمه‌ای انتخاب نشده','error');return}
     const cat=document.getElementById('expCategory')?.value||'VocabForge';
-    const payload=complete.map(c=>({...c,category:cat}));
+    const dest=document.getElementById('expDest').value==='longTerm'?'longTerm':'words';
+    const payload=selected.map(c=>({...c,category:cat,_sel:undefined}));
     const hint=document.getElementById('expSendHint');
     try{
       if(window.parent&&window.parent!==window){
-        window.parent.postMessage({type:'vfa-send-cards',cards:payload,category:cat},'*');
-        if(hint){hint.style.display='block';hint.textContent='✅ '+payload.length+' کارت ارسال شد — در پنجره اصلی لایتنر ادامه دهید'}
+        // داخل لایتنر (iframe) — ارسال مستقیم به والد
+        window.parent.postMessage({type:'vfa-send-cards',cards:payload,category:cat,dest},'*');
+        if(hint){hint.style.display='block';hint.textContent='✅ '+payload.length+' کارت به '+(dest==='longTerm'?'حافظه بلندمدت':'کتابخانه')+' لایتنر ارسال شد'}
+        toast(payload.length+' کارت به لایتنر ارسال شد','success');
       }else{
-        // Standalone mode: fall back to download
-        const json=getExportJSON();
-        const blob=new Blob([json],{type:'application/json'});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');a.href=url;a.download='vocabforge_leitner.json';a.click();
-        URL.revokeObjectURL(url);
-        if(hint){hint.style.display='block';hint.textContent='این نسخه مستقیم است — فایل JSON دانلود شد؛ آن را در لایتنر وارد کنید'}
-        toast('فایل JSON دانلود شد','success');
+        // حالت مستقل (صفحه وکب فورج روی گیت‌هاب) — ذخیره و باز کردن لایتنر
+        localStorage.setItem(LEITNER_PENDING_KEY,JSON.stringify({cards:payload,dest:dest,ts:Date.now()}));
+        const url='https://mohsen-niksirat.github.io/leitner-pro/';
+        window.open(url,'_blank');
+        if(hint){hint.style.display='block';hint.textContent='✅ '+payload.length+' کارت آماده شد — لایتنر پرو در تب جدید باز شد'}
+        toast(payload.length+' کارت آماده انتقال به لایتنر شد','success');
       }
     }catch(err){toast('خطا در ارسال: '+err.message,'error')}
   };

@@ -545,13 +545,56 @@ function renderVocabforge(c){
       if(d&&d.type==='vfa-send-cards'&&Array.isArray(d.cards)){
         if(!d.cards.length){toast('کارتی برای ارسال نیست','info');return}
         try{
-          const st=stageImportCards(d.cards,'vocabforge');
-          if(st)toast(d.cards.length+' کارت از وکب فورج آماده ورود شد ✅','success');
+          const dest=d.dest==='longTerm'?'longTerm':'words';
+          const res=commitVocabForgeCards(d.cards,dest);
+          toast(res.added+' کلمه از وکب فورج به '+(dest==='longTerm'?'حافظه بلندمدت':'کتابخانه')+' اضافه شد ✅','success');
+          if(res.dups)toast(res.dups+' کلمه تکراری رد شد','info');
+          render();
         }catch(err){toast('خطا در ورود کارت‌ها: '+err.message,'error')}
       }
     });
   }
 }
+// افزودن مستقیم کارت‌های وکب فورج به مقصد مشخص (کتابخانه یا حافظه بلندمدت)
+function commitVocabForgeCards(cards,dest){
+  const isLT=dest==='longTerm';
+  const existing=new Set(S.words.map(w=>w.word.toLowerCase()));
+  const existingLT=new Set(S.longTerm.map(w=>w.word.toLowerCase()));
+  let added=0,dups=0;
+  cards.forEach(raw=>{
+    const w=(raw.word||'').trim();
+    if(!w)return;
+    const k=w.toLowerCase();
+    if(existing.has(k)||existingLT.has(k)){dups++;return}
+    const card=sanitizeCard({...raw,word:w});
+    if(isLT){card.box=0;card.nextReviewDate=null;S.longTerm.push(card);existingLT.add(k)}
+    else{S.words.push(card);existing.add(k)}
+    added++;
+  });
+  if(added)save();
+  return{added:added,dups:dups};
+}
+// دریافت خودکار از صفحه مستقل وکب فورج (هم‌ریشه: گیت‌هاب پیج)
+function receivePendingVocabForge(){
+  try{
+    const raw=localStorage.getItem('leitner_pending_import');
+    if(!raw)return false;
+    localStorage.removeItem('leitner_pending_import');
+    const data=JSON.parse(raw);
+    if(!data||!Array.isArray(data.cards)||!data.cards.length)return false;
+    const dest=data.dest==='longTerm'?'longTerm':'words';
+    const res=commitVocabForgeCards(data.cards,dest);
+    toast(res.added+' کلمه از وکب فورج به '+(dest==='longTerm'?'حافظه بلندمدت':'کتابخانه')+' اضافه شد ✅','success');
+    if(res.dups)toast(res.dups+' کلمه تکراری رد شد','info');
+    return true;
+  }catch(e){console.warn('receivePendingVocabForge:',e);return false}
+}
+// اگر لایتنر از قبل در تب دیگری باز است، تغییر ذخیره‌سازی را بگیر
+window.addEventListener('storage',function(e){
+  if(e.key==='leitner_pending_import'&&e.newValue){
+    setTimeout(function(){if(receivePendingVocabForge())render()},300);
+  }
+});
 </script>
 <script>
 // ═══════════════════════════════════════════
@@ -9128,6 +9171,8 @@ if(savedPdf&&savedPdf.fileName)pdfFileName=savedPdf.fileName;
 // Restore reading settings
 try{var _rdDash=localStorage.getItem('leitner_reading_dashVisible');if(_rdDash!==null)readingDashboardVisible=_rdDash==='1';var _rdFont=localStorage.getItem('leitner_reading_fontSize');if(_rdFont)readingFontSize=parseFloat(_rdFont);var _rdLH=localStorage.getItem('leitner_reading_lineHeight');if(_rdLH)readingLineHeight=parseFloat(_rdLH);var _rdTheme=localStorage.getItem('leitner_reading_contentTheme');if(_rdTheme)readingContentTheme=_rdTheme;}catch(e){}
 applyTheme();if(S.settings.fontSize)document.documentElement.setAttribute('data-fontsize',S.settings.fontSize);render();rebuildIndex();checkSharedDeckHash();
+// دریافت خودکار کارت‌های ارسال‌شده از وکب فورج (بعد از بارگذاری کامل داده‌ها)
+setTimeout(function(){if(typeof receivePendingVocabForge==='function'&&receivePendingVocabForge())render()},600);
 // Re-init quiz delegation after each render
 const origRender=render;
 render=function(){origRender();if(currentTab==='quiz')initQuiz()};
