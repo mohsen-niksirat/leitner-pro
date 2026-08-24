@@ -13,6 +13,16 @@
 📱 **Telegram** → [@MyLeitner](https://t.me/MyLeitner)
 🤖 **Quiz Bot** → [@English_Quiz_Beta_Bot](https://t.me/English_Quiz_Beta_Bot)
 
+### 📸 Screenshots / تصاویر برنامه
+
+<div align="center">
+
+<img src="screenshots/review.jpg" alt="مرور هوشمند" width="31%">
+<img src="screenshots/library.jpg" alt="کتابخانه واژگان" width="31%">
+<img src="screenshots/wordweb.jpg" alt="نقشه واژگان" width="31%">
+
+</div>
+
 </div>
 
 ---
