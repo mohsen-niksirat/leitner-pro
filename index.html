@@ -138,6 +138,24 @@ tr:hover td{background:var(--card-hover)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal{background:var(--card);border-radius:var(--radius);padding:28px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 24px 80px rgba(0,0,0,.5)}
 .modal h3{margin-bottom:18px;font-weight:700}
+.help-btn{background:none;border:1px solid var(--border);color:var(--accent);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:.85rem;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-family:inherit;margin-right:8px}
+.help-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar-actions .help-btn{width:30px;height:30px;font-size:1rem;margin-right:0}
+.help-section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.help-modal-body{font-size:.88rem;line-height:2;color:var(--text2)}
+.help-modal-body strong{color:var(--text)}
+.help-modal-body ul{padding-right:18px;margin:6px 0}
+.help-modal-body li{margin-bottom:4px}
+.help-btn{background:none;border:1px solid var(--border);color:var(--accent);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:.85rem;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-family:inherit}
+.help-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar .help-btn{width:30px;height:30px;font-size:1rem}
+.help-section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.help-modal-body{font-size:.88rem;line-height:2;color:var(--text2)}
+.help-modal-body strong{color:var(--text)}
+.help-modal-body ul{padding-right:18px;margin:6px 0}
+.help-modal-body li{margin-bottom:4px}
+.import-method{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.import-method:last-child{border-bottom:none}
 .tag{display:inline-block;padding:3px 10px;border-radius:8px;font-size:.7rem;background:linear-gradient(135deg,var(--accent),#7c6cf0);color:#fff;margin:2px}
 .hidden{display:none!important}
 .lib-pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;flex-wrap:wrap}
@@ -450,6 +468,91 @@ html[data-fontsize="xlarge"]{font-size:20px}
 </main>
 </div>
 <div class="toast-container" id="toasts" aria-live="polite" aria-atomic="true"></div>
+<script>
+// ═══════════════════════════════════════════
+// HELP SYSTEM — راهنمای عمومی هر بخش (لایتنر پرو v4.0)
+// ═══════════════════════════════════════════
+const HELP_DICT={
+review:{title:'📖 مرور هوشمند',body:'<p>در این بخش کلماتی که <strong>زمان مرورشان رسیده</strong> نمایش داده می‌شوند. برنامه با الگوریتم <strong>FSRS</strong> فاصله مرور هر کلمه را بر اساس عملکرد شما محاسبه می‌کند.</p><ul><li>کارت را ببینید، ترجمه را حدس بزنید و کارت را برگردانید.</li><li>به عملکرد خود <strong>۴ امتیاز</strong> بدهید (از «یادم نبود» تا «خیلی آسان»).</li><li>هرچه درست‌تر جواب دهید، فاصله مرور بعدی طولانی‌تر می‌شود.</li><li>گزینه «پخش خودکار» برای مرور پشت‌سرهم با سرعت دلخواه مناسب است.</li></ul>'},
+  quiz:{title:'❓ آزمون',body:'<p>دانش واژگان خود را در قالب <strong>آزمون‌های متنوع</strong> بسنجید: معنی، مترادف، متضاد، جمله، املاء و تعریف.</p><ul><li>آزمون‌ها از کلمات کتابخانه شما ساخته می‌شوند.</li><li>بعد از هر آزمون، نتیجه و درصد درستی نمایش داده می‌شود.</li><li>عملکرد شما در «آمار و تقویم» ذخیره می‌شود.</li></ul>'},
+engquiz:{title:'🎯 تعیین سطح انگلیسی',body:'<p>سطح CEFR خود را (A1 تا C2) با یک آزمون کوتاه بسنجید: واژگان، گرامر، لیسنینگ و رایتینگ.</p><ul><li>این بخش یک ابزار بیرونی (English Quiz) است که داخل برنامه لود می‌شود.</li><li>می‌توانید از «وکب فورج» یا «ورود کلمات» برای اضافه کردن کلمات جدید استفاده کنید.</li></ul>'},
+library:{title:'📚 کتابخانه واژگان',body:'<p>همه کلمات <strong>لایتنر</strong> شما با صفحه‌بندی، جستجو و فیلتر مدیریت می‌شود.</p><ul><li>جستجو، فیلتر بر اساس دسته و وضعیت، ویرایش و حذف کلمه.</li><li>کلمات <strong>تثبیت‌شده</strong> به‌صورت خودکار به «حافظه بلندمدت» منتقل می‌شوند.</li></ul>'},
+longterm:{title:'🧠 حافظه بلندمدت',body:'<p>کلماتی که به خوبی یاد گرفته‌اید اینجا نگهداری می‌شوند تا فراموش نشوند.</p><ul><li>مرور آن‌ها با فاصله‌های طولانی انجام می‌شود.</li><li>می‌توانید آن‌ها را برگردانید یا حذف کنید.</li></ul>'},
+wordweb:{title:'🗺️ نقشه واژگان',body:'<p>رابطه بین کلمات را به‌صورت شبکه ببینید: مترادف‌ها، متضادها و خانواده کلمه.</p><p>برای یادگیری دسته‌ای و دیدن ارتباط معنایی کلمات مفید است.</p>'},
+import:{title:'📥 ورود کلمات',body:'<p>چند روش برای افزودن کلمه دارید — هر روش یک دکمه «؟» کوچک دارد که توضیح می‌دهد.</p><ul><li><strong>متن/فایل:</strong> چسباندن متن انگلیسی یا آپلود TXT/PDF/DOCX/JSON/APKG.</li><li><strong>DOCX هوشمند:</strong> فایل‌های واژگان ساخت‌یافته (مثل Manhattan 500).</li><li><strong>URL:</strong> دریافت مستقیم لیست کلمات از یک لینک.</li><li><strong>افزودن سریع:</strong> چند کلمه با ترجمه در چند ثانیه.</li><li><strong>بسته‌های آماده و وکب فورج:</strong> ساخت/دریافت فلش‌کارت حرفه‌ای.</li></ul><p>بعد از انتخاب، کلمات در مرحله «انتخاب و مقصد» بررسی و به کتابخانه یا حافظه بلندمدت اضافه می‌شوند.</p>'},
+export:{title:'💾 خروج / پشتیبان',body:'<p>مدیریت کامل داده‌های لایتنر پرو.</p><ul><li><strong>پشتیبان‌گیری:</strong> خروجی JSON کامل از همه کلمات و تنظیمات.</li><li><strong>پشتیبان خودکار:</strong> تا ۱۰ نسخه قبلی ذخیره و قابل بازگشت است.</li><li><strong>اشتراک‌گذاری دسته:</strong> دانلود/دریافت دسته‌های واژگان.</li><li><strong>بازیابی از فایل:</strong> ورود پشتیبان قبلی یا خروجی وکب فورج.</li><li><strong>فرمت‌های خروجی:</strong> CSV، Anki و چاپ لیست.</li></ul><p>⚠️ پیشنهاد: مرتب پشتیبان بگیرید تا در صورت پاک شدن مرورگر داده‌ها از بین نرود.</p>'},
+reading:{title:'📰 خواندن متن',body:'<p>متن انگلیسی را بچسبانید و هنگام خواندن، روی کلمات ناشناخته کلیک کنید تا ترجمه را ببینید یا به کتابخانه اضافه کنید.</p>'},
+pdfreader:{title:'📄 خواننده PDF',body:'<p>فایل PDF را باز کنید، متن را انتخاب کنید و کلمات را با ترجمه پاپ‌آپ به لایتنر اضافه کنید.</p><p>بوکمارک صفحه‌ها هم ذخیره می‌شود.</p>'},
+stats:{title:'📊 آمار و تقویم',body:'<p>پیشرفت خود را ببینید: کلمات اضافه‌شده، مرورها، دقت، نمودار فعالیت و نقشه حرارتی روزانه.</p><p>سیستم XP هم سطح‌بندی شما را نشان می‌دهد.</p>'},
+aichat:{title:'🤖 چت با هوش مصنوعی',body:'<p>از یک مدل هوش مصنوعی (Gemini/OpenRouter/Groq) سوال بپرسید یا برای کلمات مثال و توضیح بگیرید.</p><p>برای شروع، در تنظیمات بخش هوش مصنوعی، کلید API مدل موردنظر را وارد کنید.</p>'},
+vocabforge:{title:'⚒️ وکب فورج — سازنده فلش‌کارت',body:'<p><strong>VocabForge</strong> ابزار ساخت فلش‌کارت: از PDF یا DOCX کلمه استخراج کنید، تعریف/مترادف بگیرید، ترجمه فارسی کنید و مستقیم به لایتنر بفرستید.</p><ul><li><strong>ورود داده:</strong> DOCX (ساختار Manhattan)، PDF با انتخاب صفحات، متن خام یا لیست کلمات.</li><li><strong>غنی‌سازی:</strong> تعریف، مثال، مترادف و متضاد خودکار از ۳ منبع رایگان.</li><li><strong>ترجمه:</strong> ترجمه فارسی مبتنی بر معنای انگلیسی.</li><li><strong>ارسال:</strong> در تب خروجی، دکمه «ارسال مستقیم به لایتنر» را بزنید تا کلمات در بخش «ورود کلمات» ظاهر شوند.</li></ul><p>نکته: برای فایل‌های حجیم، ترجمه را در چند مرحله انجام دهید (محدودیت روزانه API رایگان).</p>'},
+settings:{title:'⚙️ تنظیمات',body:'<p>پوسته، زبان مبدأ/مقصد، اعلان‌ها، قفل سایدبار و تنظیمات هوش مصنوعی.</p>'},
+about:{title:'ℹ️ درباره',body:'<p>نسخه و اطلاعات برنامه، لینک‌ها و اعتبار APIها.</p>'}
+};
+const IMPORT_HELPS={
+  text:{title:'ورود از متن',body:'<p>متن انگلیسی را در کادر بچسبانید و «نمایش متن» را بزنید.</p><ul><li>برنامه کلمات را استخراج می‌کند و شما انتخاب می‌کنید کدام‌ها وارد شوند.</li><li>دسته‌بندی تازه را هم می‌توانید تعیین کنید.</li></ul>'},
+  file:{title:'ورود از فایل',body:'<p>این روش برای <strong>فایل‌های ذخیره‌شده</strong> است:</p><ul><li>TXT/PDF/DOCX: متن استخراج و کلمات پیشنهاد می‌شوند.</li><li>JSON: پشتیبان لایتنر یا خروجی وکب فورج.</li><li>APKG: فایل Anki (کارت‌ها به فرمت لایتنر تبدیل می‌شوند).</li></ul>'},
+  docx:{title:'ورود هوشمند DOCX',body:'<p>برای فایل‌های DOCX با <strong>ساختار جدول واژگانی</strong> (مثل کتاب Manhattan 500) طراحی شده است.</p><p>ستون‌ها: کلمه، ترجمه، معنی، مثال/Context، مترادف و متضاد + سطرهای Example/Note/Trap — همه به‌صورت خودکار استخراج می‌شوند.</p>'},
+  url:{title:'ورود از URL',body:'<p>یک لینک مستقیم به یک فایل متنی بدهید تا متن آن دانلود شود.</p><p>بعد از دریافت، مثل «ورود از متن» کلمات را انتخاب و وارد کنید.</p>'},
+  quick:{title:'افزودن سریع کلمات',body:'<p>سریع‌ترین راه برای افزودن چند کلمه:</p><p>هر خط یک کلمه:</p><code style="background:var(--bg);padding:8px 12px;display:block;border-radius:8px;direction:ltr;text-align:left">hello=سلام\nworld=دنیا\nbook</code><p>کلماتی که ترجمه ندارند به‌صورت خودکار ترجمه می‌شوند.</p>'},
+  packs:{title:'بسته‌های لغت آماده',body:'<p>پک‌های آماده کلمه (مثل ۵۰۴، ۱۱۰۰ و...) را مستقیم به کتابخانه اضافه می‌کند.</p><p>می‌توانید از لینک هم پک دانلود کنید.</p>'},
+  vocabforge:{title:'وکب فورج',body:'<p>به بخش <strong>وکب فورج</strong> در منوی «ساخت فلش‌کارت» بروید.</p><p>آنجا می‌توانید از PDF/DOCX کلمه استخراج، غنی‌سازی، ترجمه و با یک کلیک به لایتنر بفرستید.</p>'}
+};
+function helpModal(title,bodyHtml){
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  ov.innerHTML='<div class="modal" style="max-width:560px"><div class="help-section-title"><h3 style="margin:0;flex:1">'+title+'</h3><button type="button" class="btn btn-ghost btn-sm" id="helpCloseBtn">✕ بستن</button></div><div class="help-modal-body">'+bodyHtml+'</div></div>';
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove()});
+  document.body.appendChild(ov);
+  const close=ov.querySelector('#helpCloseBtn');
+  if(close)close.addEventListener('click',()=>ov.remove());
+}
+function showHelp(key){
+  const h=HELP_DICT[key]||HELP_DICT.about;
+  helpModal(h.title,h.body);
+}
+function showImportHelp(key){
+  const h=IMPORT_HELPS[key];
+  if(h)helpModal(h.title,h.body);
+}
+// تزریق دکمه «؟» کنار هر روش ورود
+function decorateImportHelp(){
+  const titles={text:'ورود متن',file:'ورود فایل',docx:'ورود هوشمند DOCX واژگان',url:'ورود از URL',quick:'افزودن سریع کلمات',packs:'بسته‌های لغت آماده'};
+  document.querySelectorAll('#content h3, #content h4').forEach(h3=>{
+    const t=h3.textContent.trim();
+    let key=null;
+    if(t.startsWith('ورود متن'))key='text';
+    else if(t.startsWith('ورود فایل'))key='file';
+    else if(t.includes('ورود هوشمند DOCX'))key='docx';
+    else if(t.startsWith('ورود از URL'))key='url';
+    else if(t.includes('افزودن سریع کلمات'))key='quick';
+    else if(t.includes('بسته‌های لغت آماده'))key='packs';
+    if(!key||h3.querySelector('.help-btn'))return;
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='help-btn';btn.title='توضیح';btn.textContent='؟';
+    btn.addEventListener('click',()=>showImportHelp(key));
+    h3.appendChild(btn);
+  });
+}
+// ═══════════════════════════════════════════
+// VOCABFORGE — بخش جاسازی‌شده سازنده فلش‌کارت
+// ═══════════════════════════════════════════
+function renderVocabforge(c){
+  c.innerHTML='<div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px"><span style="font-size:1.7rem">⚒️</span><div style="flex:1;min-width:200px"><h3 style="margin:0;color:var(--accent)">VocabForge — سازنده فلش‌کارت</h3><p style="font-size:.82rem;color:var(--text2);margin-top:2px">استخراج، غنی‌سازی و ترجمه واژگان از PDF/DOCX — ارسال مستقیم به لایتنر</p></div><button type="button" class="btn btn-primary btn-sm" onclick="showHelp(\'vocabforge\')">راهنما 🙋</button></div><div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;height:calc(100vh - 230px);min-height:500px;background:var(--bg2)"><iframe id="vfFrame" title="VocabForge" src="vocabforge.html" style="width:100%;height:100%;border:none"></iframe></div>';
+  if(!window.__vfBound){
+    window.__vfBound=true;
+    window.addEventListener('message',function(e){
+      const d=e.data;
+      if(d&&d.type==='vfa-send-cards'&&Array.isArray(d.cards)){
+        if(!d.cards.length){toast('کارتی برای ارسال نیست','info');return}
+        try{
+          const st=stageImportCards(d.cards,'vocabforge');
+          if(st)toast(d.cards.length+' کارت از وکب فورج آماده ورود شد ✅','success');
+        }catch(err){toast('خطا در ورود کارت‌ها: '+err.message,'error')}
+      }
+    });
+  }
+}
+</script>
 <script>
 // ═══════════════════════════════════════════
 // CONSTANTS
@@ -1522,6 +1625,9 @@ const NAV_GROUPS=[
 {id:'import',label:'ورود کلمات',icon:'📥'},
 {id:'export',label:'خروج / پشتیبان',icon:'💾'}
 ]},
+{label:'ساخت فلش‌کارت',items:[
+{id:'vocabforge',label:'وکب فورج',icon:'⚒️'}
+]},
 {label:'خواندن',items:[
 {id:'reading',label:'خواندن متن',icon:'📰'},
 {id:'pdfreader',label:'خواننده PDF',icon:'📄'}
@@ -1565,13 +1671,16 @@ renderNav();
 // Render daily challenge widget in sidebar
 const dcw=document.getElementById('dailyChallengeWidget');
 if(dcw&&typeof renderDailyChallengeWidget==='function')dcw.innerHTML=renderDailyChallengeWidget();
-const titles={review:'مرور',quiz:'آزمون',engquiz:'تعیین سطح',library:'کتابخانه',longterm:'حافظه بلندمدت',import:'ورود',reading:'خواندن',pdfreader:'خواننده PDF',wordweb:'نقشه واژگان',stats:'آمار و تقویم',export:'خروج / پشتیبان',aichat:'چت با هوش مصنوعی',settings:'تنظیمات',about:'درباره'};
+const titles={review:'مرور',quiz:'آزمون',engquiz:'تعیین سطح',library:'کتابخانه',longterm:'حافظه بلندمدت',import:'ورود',reading:'خواندن',pdfreader:'خواننده PDF',wordweb:'نقشه واژگان',stats:'آمار و تقویم',export:'خروج / پشتیبان',aichat:'چت با هوش مصنوعی',vocabforge:'وکب فورج',settings:'تنظیمات',about:'درباره'};
 document.getElementById('pageTitle').textContent=titles[currentTab]||'';
+// Help button in topbar (if this tab has help text)
+var _th=document.getElementById('topActions');
+if(_th){_th.innerHTML=HELP_DICT[currentTab]?'<button type="button" class="btn btn-ghost btn-sm" onclick="showHelp(\''+currentTab+'\')" title="راهنمای این بخش">🙋 راهنما</button>':''}
 // Update page title with due count badge
 const dueBadge=getDue().length;
 document.title=dueBadge>0?'('+dueBadge+') لایتنر — '+titles[currentTab]:'لایتنر — مرور هوشمند';
 const c=document.getElementById('content');
-const renders={review:renderReview,library:renderLibrary,longterm:renderLongterm,import:(_stagedImportCards.length?renderStagedImport:renderImport),reading:renderReading,pdfreader:renderPDFReader,wordweb:renderWordWeb,export:renderExport,stats:renderStats,quiz:renderQuiz,engquiz:renderEngQuiz,aichat:renderAiChat,settings:renderSettings,about:renderAbout};
+const renders={review:renderReview,library:renderLibrary,longterm:renderLongterm,import:(_stagedImportCards.length?renderStagedImport:renderImport),reading:renderReading,pdfreader:renderPDFReader,wordweb:renderWordWeb,export:renderExport,stats:renderStats,quiz:renderQuiz,engquiz:renderEngQuiz,aichat:renderAiChat,vocabforge:renderVocabforge,settings:renderSettings,about:renderAbout};
 const _renderFn=renders[currentTab];
 if(_renderFn){
   try{_renderFn(c)}catch(err){
@@ -2676,7 +2785,7 @@ return`<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12p
     <div id="custom-pack-status" style="margin-top:8px;font-size:.82rem"></div>
   </div>
 </div>
-<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div><div class="card" style="margin-bottom:16px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(162,155,254,.05))"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span style="font-size:1.8rem">⚒️</span><div><h3 style="color:var(--accent);margin-bottom:2px">VocabForge — سازنده فلشکارت</h3><p style="font-size:.82rem;color:var(--text2)">کلمات را از PDF/DOCX استخراج، غنیسازی و ترجمه کنید و مستقیماً به لایتنر وارد کنید.</p></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://mohsen-niksirat.github.io/VocabForge/" target="_blank" class="btn btn-primary btn-sm">🌐 باز کردن VocabForge</a><span style="font-size:.78rem;color:var(--text2);display:flex;align-items:center">فایل JSON خروجی VocabForge را اینجا وارد کنید</span></div></div>`}
+<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div><div class="card" style="margin-bottom:16px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(162,155,254,.05))"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span style="font-size:1.8rem">⚒️</span><div><h3 style="color:var(--accent);margin-bottom:2px">VocabForge — سازنده فلشکارت</h3><p style="font-size:.82rem;color:var(--text2)">کلمات را از PDF/DOCX استخراج، غنیسازی و ترجمه کنید و مستقیماً به لایتنر وارد کنید.</p></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-primary btn-sm" onclick="navigateTo('vocabforge')">⚒️ باز کردن وکب فورج</button><span style="font-size:.78rem;color:var(--text2);display:flex;align-items:center">فلش‌کارت بسازید و مستقیم به لایتنر بفرستید — یا فایل JSON خروجی آن را همین‌جا وارد کنید</span></div></div>`}
 
 function renderSelectableTextSection(){
 if(!textRenderedWords.length){
@@ -2833,7 +2942,9 @@ resultDiv.innerHTML='<div style="padding:10px;background:'+(added>0?'var(--succe
 document.getElementById('quickImportText').value='';
 };
 const qiClear=document.getElementById('quickImportClearBtn');
-if(qiClear)qiClear.onclick=()=>{document.getElementById('quickImportText').value='';document.getElementById('quickImportResult').innerHTML='';}}
+if(qiClear)qiClear.onclick=()=>{document.getElementById('quickImportText').value='';document.getElementById('quickImportResult').innerHTML='';}
+decorateImportHelp();
+}
 else if(importStep===1){
 document.querySelectorAll('.text-word').forEach(el=>{
 el.onclick=()=>{const wid=parseInt(el.dataset.wid);const w=textRenderedWords.find(x=>x.id===wid);if(w){w.selected=!w.selected;el.classList.toggle('selected');const selCount=textRenderedWords.filter(x=>x.selected).length;const btn=document.getElementById('tsTranslate');if(btn){btn.disabled=selCount===0;btn.textContent='ترجمه انتخاب شده ('+selCount+')'}}};
@@ -8952,7 +9063,7 @@ c.innerHTML=`<div style="max-width:700px;margin:0 auto">
   <div style="text-align:center;padding:20px;color:var(--text2);font-size:.8rem">
     <p>ساخته شده با ❤️ برای یادگیری بهتر واژگان</p>
     <p style="margin-top:4px"><a href="http://readner.eu.cc/" target="_blank" style="color:var(--accent);text-decoration:none">readner.eu.cc</a> · <a href="https://t.me/MyLeitner" target="_blank" style="color:var(--accent);text-decoration:none">@MyLeitner</a></p>
-    <p style="margin-top:4px;opacity:.6">Leitner Pro v3.8.3 — FSRS Algorithm</p>
+    <p style="margin-top:4px;opacity:.6">Leitner Pro v4.0 — FSRS Algorithm</p>
   </div>
 </div>`}
 

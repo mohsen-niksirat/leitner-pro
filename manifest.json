@@ -1,7 +1,7 @@
 {
-  "name": "برنامه مرور لایتنر — نسخه ۳.۸.۳",
+  "name": "لایتنر پرو — نسخه ۴.۰",
   "short_name": "لایتنر",
-  "description": "مرور هوشمند واژگان انگلیسی با الگوریتم FSRS",
+  "description": "مرور هوشمند واژگان انگلیسی با الگوریتم FSRS + سازنده فلش‌کارت وکب فورج",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",

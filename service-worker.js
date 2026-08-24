@@ -2,13 +2,14 @@
 // لایتنر PWA — Service Worker v1
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'litreader-v3.8.3';
+const CACHE_NAME = 'litreader-v4.0';
 const RUNTIME_CACHE = 'litreader-runtime-v1';
 
 // فایل‌هایی که موقع نصب کش میشن (فایل‌های اصلی اپ)
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './vocabforge.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

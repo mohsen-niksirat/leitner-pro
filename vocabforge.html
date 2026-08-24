@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocabForge v3.0 — سازنده فلش‌کارت لایتنر</title>
+<meta name="theme-color" content="#6c5ce7">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0b10;--bg2:#13151f;--card:#1a1d2b;--card-hover:#22263a;--border:#2a2e42;--text:#e8eaed;--text2:#8b90a5;--accent:#6c5ce7;--accent2:#a29bfe;--accent-glow:rgba(108,92,231,.25);--success:#00b894;--danger:#e17055;--warning:#fdcb6e;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,.4);--font:'Vazirmatn',system-ui,sans-serif}
+[data-theme="light"]{--bg:#f0f2f5;--bg2:#ffffff;--card:#ffffff;--card-hover:#f5f6fa;--border:#e0e3e8;--text:#1a1d27;--text2:#5f6577;--shadow:0 4px 24px rgba(0,0,0,.06);--accent-glow:rgba(108,92,231,.12)}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--bg2);border-left:1px solid var(--border);padding:20px 0;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;right:0;z-index:100;transition:transform .3s;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sidebar-header{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.sidebar-header h1{font-size:1.25rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-header p{font-size:.7rem;color:var(--text2);margin-top:3px}
+.nav-btn{display:flex;align-items:center;gap:10px;width:calc(100% - 16px);margin:2px 8px;padding:9px 12px;border:none;background:none;color:var(--text2);font:inherit;font-size:.83rem;border-radius:12px;cursor:pointer;transition:all .25s;text-align:right}
+.nav-btn:hover{background:var(--accent-glow);color:var(--text)}
+.nav-btn.active{background:linear-gradient(135deg,var(--accent),#7c6cf0);color:#fff;font-weight:600}
+.nav-btn .icon{width:20px;text-align:center;font-size:1rem}
+.main{flex:1;padding:22px;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:10px}
+.topbar h2{font-size:1.3rem;font-weight:700}
+.btn{padding:9px 18px;border:none;border-radius:12px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:5px}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#7c6cf0);color:#fff;box-shadow:0 2px 12px rgba(108,92,231,.3)}
+.btn-success{background:linear-gradient(135deg,var(--success),#00d2a0);color:#fff}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#f0825e);color:#fff}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--accent-glow);color:var(--text);border-color:var(--accent)}
+.btn-sm{padding:6px 12px;font-size:.76rem;border-radius:10px}
+.card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:14px}
+.input{width:100%;padding:9px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font:inherit;font-size:.82rem;transition:all .25s}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+textarea.input{resize:vertical;min-height:100px;line-height:1.7}
+select.input{cursor:pointer}
+.badge{display:inline-block;padding:2px 9px;border-radius:18px;font-size:.66rem;font-weight:600}
+.badge-success{background:rgba(0,184,148,.15);color:var(--success);border:1px solid rgba(0,184,148,.2)}
+.badge-accent{background:rgba(108,92,231,.15);color:var(--accent);border:1px solid rgba(108,92,231,.2)}
+.progress-bar{width:100%;height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:5px;transition:width .4s}
+.toast-container{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{padding:11px 22px;border-radius:11px;color:#fff;font-size:.83rem;font-weight:500;pointer-events:auto;animation:slideIn .35s;box-shadow:0 6px 28px rgba(0,0,0,.3)}
+.toast-success{background:linear-gradient(135deg,var(--success),#00d2a0)}.toast-error{background:linear-gradient(135deg,var(--danger),#f0825e)}.toast-info{background:linear-gradient(135deg,var(--accent),#7c6cf0)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{text-align:center;padding:14px;border:1px solid var(--border);border-radius:var(--radius)}
+.stat-card .val{font-size:1.5rem;font-weight:800;color:var(--accent)}.stat-card .lbl{font-size:.7rem;color:var(--text2);margin-top:3px}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:35px;text-align:center;cursor:pointer;transition:all .3s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-glow)}
+.drop-zone .icon{font-size:2.2rem;margin-bottom:8px}.drop-zone p{color:var(--text2);font-size:.85rem}
+.card-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:6px;transition:all .2s}
+.card-item:hover{border-color:var(--accent)}
+.card-item .word{font-size:1rem;font-weight:700;color:var(--accent)}.card-item .pos{font-size:.7rem;color:var(--text2);margin-right:5px}
+.card-item .trans{font-size:.85rem;margin-top:3px}.card-item .def{font-size:.76rem;color:var(--text2);margin-top:3px;line-height:1.5}
+.filter-bar{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;padding:2px 7px;border-radius:7px;font-size:.65rem;background:linear-gradient(135deg,var(--accent),#7c6cf0);color:#fff;margin:1px}
+.hamburger{background:none;border:none;color:var(--text);font-size:1.3rem;cursor:pointer;padding:7px;min-width:38px;min-height:38px;display:flex;align-items:center;justify-content:center;border-radius:9px}
+.hamburger:hover{background:var(--accent-glow)}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.theme-toggle:hover{background:var(--accent-glow);border-color:var(--accent)}
+.sidebar:not(.open){transform:translateX(100%)}.main.sidebar-open{margin-right:240px}.main.sidebar-closed{margin-right:0}
+/* ═══ ANIMATIONS ═══ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+.card{animation:fadeIn .3s ease-out}
+.card-item{animation:fadeIn .25s ease-out}
+.stat-card{transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.drop-zone{transition:all .3s ease}
+.drop-zone:hover{transform:scale(1.01)}
+.btn{transition:all .2s ease}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.btn:active{transform:scale(.97) translateY(0)}
+/* ═══ LOADING SKELETON ═══ */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--card-hover) 50%,var(--card) 75%);background-size:400px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+/* ═══ BETTER PROGRESS ═══ */
+.progress-bar{position:relative;overflow:hidden}
+.progress-fill{position:relative}
+.progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 1.5s infinite}
+/* ═══ CARD ITEM ENHANCED ═══ */
+.card-item{position:relative;overflow:hidden}
+.card-item::before{content:'';position:absolute;top:0;right:0;width:3px;height:0;background:var(--accent);transition:height .3s;border-radius:0 0 0 3px}
+.card-item:hover::before{height:100%}
+/* ═══ ENRICH STATUS ═══ */
+.enrich-done{color:var(--success);font-weight:600}
+.enrich-fail{color:var(--danger)}
+/* ═══ TOAST ENHANCED ═══ */
+.toast{backdrop-filter:blur(8px)}
+@media(max-width:768px){.sidebar{transform:translateX(100%)}.sidebar.open{transform:translateX(0)}.main{margin-right:0;padding:12px}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toasts"></div>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header"><h1>⚒️ VocabForge</h1><p>سازنده فلش‌کارت برای لایتنر</p></div>
+<div id="nav"></div>
+<div style="margin-top:auto;padding:12px 14px"><button class="theme-toggle" id="themeBtn" type="button">🌙</button></div>
+</aside>
+<main class="main" id="main">
+<div class="topbar"><button class="hamburger" id="hamBtn" type="button">☰</button><h2 id="pageTitle"></h2></div>
+<div id="content"></div>
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const TABS=[
+{id:'import',label:'ورود داده',icon:'📄'},
+{id:'cards',label:'کارت‌ها',icon:'🃏'},
+{id:'enrich',label:'غنی‌سازی',icon:'🔍'},
+{id:'export',label:'خروجی لایتنر',icon:'💾'},
+{id:'about',label:'درباره',icon:'ℹ️'}
+];
+
+let currentTab='import';
+let cards=[]; // full Leitner-format cards
+let sourceName='';
+
+// ═══════════════════════════════════════════
+// PERSISTENCE — IndexedDB (unlimited) + cache
+// ═══════════════════════════════════════════
+const IDB_NAME='vocabforgeDB';
+const IDB_CARDS='cards';
+const IDB_CACHE='cache';
+let _db=null;
+
+function openDB(){
+  return new Promise(function(resolve,reject){
+    if(_db){resolve(_db);return}
+    const req=indexedDB.open(IDB_NAME,2);
+    req.onupgradeneeded=function(e){
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_CARDS))db.createObjectStore(IDB_CARDS);
+      if(!db.objectStoreNames.contains(IDB_CACHE))db.createObjectStore(IDB_CACHE);
+    };
+    req.onsuccess=function(e){_db=e.target.result;resolve(_db)};
+    req.onerror=function(e){reject(e.target.error)};
+  });
+}
+
+function idbPut(store,key,value){
+  return openDB().then(function(db){
+    return new Promise(function(resolve,reject){
+      const tx=db.transaction(store,'readwrite');
+      tx.objectStore(store).put(value,key);
+      tx.oncomplete=function(){resolve()};
+      tx.onerror=function(e){reject(e.target.error)};
+    });
+  });
+}
+
+function idbGet(store,key){
+  return openDB().then(function(db){
+    return new Promise(function(resolve,reject){
+      const tx=db.transaction(store,'readonly');
+      const req=tx.objectStore(store).get(key);
+      req.onsuccess=function(){resolve(req.result)};
+      req.onerror=function(e){reject(e.target.error)};
+    });
+  });
+}
+
+function idbGetAll(store){
+  return openDB().then(function(db){
+    return new Promise(function(resolve,reject){
+      const tx=db.transaction(store,'readonly');
+      const req=tx.objectStore(store).getAll();
+      req.onsuccess=function(){resolve(req.result||[])};
+      req.onerror=function(e){reject(e.target.error)};
+    });
+  });
+}
+
+function saveCards(){
+  idbPut(IDB_CARDS,'all',cards).catch(function(){
+    try{localStorage.setItem('vf_cards_fallback',JSON.stringify(cards))}catch(e){}
+  });
+}
+
+function loadCards(){
+  return idbGet(IDB_CARDS,'all').then(function(data){
+    if(data&&Array.isArray(data)){cards=data;return}
+    // Fallback: try localStorage
+    try{const d=localStorage.getItem('vf_cards_fallback');if(d){cards=JSON.parse(d);if(!Array.isArray(cards))cards=[]}}catch(e){cards=[]}
+  }).catch(function(){
+    try{const d=localStorage.getItem('vf_cards_fallback');if(d){cards=JSON.parse(d);if(!Array.isArray(cards))cards=[]}}catch(e){cards=[]}
+  });
+}
+
+// ═══ CACHE — dictionary & translation results ═══
+function getCachedDict(word){return idbGet(IDB_CACHE,'dict_'+word.toLowerCase())}
+function setCachedDict(word,data){return idbPut(IDB_CACHE,'dict_'+word.toLowerCase(),{data:data,ts:Date.now()})}
+function getCachedTrans(word){return idbGet(IDB_CACHE,'trans_'+word.toLowerCase())}
+function setCachedTrans(word,data){return idbPut(IDB_CACHE,'trans_'+word.toLowerCase(),{data:data,ts:Date.now()})}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function toast(msg,type){const c=document.getElementById('toasts');const t=document.createElement('div');t.className='toast toast-'+(type||'info');t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3000)}
+function speakWord(w){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=0.9;speechSynthesis.speak(u)}
+
+// ═══════════════════════════════════════════
+// LEITNER CARD FACTORY — exact format
+// ═══════════════════════════════════════════
+function makeLeitnerCard(data){
+  return{
+    id:data.id||uid(),
+    word:String(data.word||'').trim(),
+    translation:String(data.translation||'').trim(),
+    ipa:String(data.ipa||'').trim(),
+    category:String(data.category||'VocabForge').trim(),
+    favorite:false,
+    context:String(data.context||'').trim(),
+    box:0,repetitions:0,interval:1,easeFactor:2.5,
+    addedDate:new Date().toISOString(),
+    nextReviewDate:null,lastReviewedAt:null,
+    // FSRS
+    stability:0,difficulty:0,elapsedDays:0,scheduledDays:0,
+    reps:0,lapses:0,fsrsState:'new',
+    // Dictionary
+    definitions:Array.isArray(data.definitions)?data.definitions:[],
+    examples:Array.isArray(data.examples)?data.examples:[],
+    synonyms:Array.isArray(data.synonyms)?data.synonyms:[],
+    partOfSpeech:String(data.partOfSpeech||'').trim(),
+    audioUs:'',audioBr:'',
+    // Rich
+    coreMeaning:String(data.coreMeaning||'').trim(),
+    collocations:Array.isArray(data.collocations)?data.collocations:[],
+    antonyms:Array.isArray(data.antonyms)?data.antonyms:[],
+    wordFamily:Array.isArray(data.wordFamily)?data.wordFamily:[],
+    note:String(data.note||'').trim(),
+    trap:String(data.trap||'').trim(),
+    tags:Array.isArray(data.tags)?data.tags:['VocabForge'],
+    source:String(data.source||'').trim()
+  };
+}
+
+// ═══════════════════════════════════════════
+// THEME & NAV
+// ═══════════════════════════════════════════
+let theme='dark';
+function applyTheme(){document.documentElement.dataset.theme=theme;document.getElementById('themeBtn').textContent=theme==='dark'?'☀️':'🌙'}
+document.getElementById('themeBtn').onclick=function(){theme=theme==='dark'?'light':'dark';applyTheme()};
+
+const sidebar=document.getElementById('sidebar');
+const mainEl=document.getElementById('main');
+document.getElementById('hamBtn').onclick=function(){sidebar.classList.toggle('open');mainEl.className=sidebar.classList.contains('open')?'main sidebar-open':'main sidebar-closed'};
+
+function renderNav(){
+  document.getElementById('nav').innerHTML=TABS.map(t=>`<button class="nav-btn${t.id===currentTab?' active':''}" data-tab="${t.id}"><span class="icon">${t.icon}</span>${t.label}</button>`).join('');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{currentTab=b.dataset.tab;render()});
+}
+
+function render(){
+  renderNav();
+  const titles={import:'ورود داده',cards:'کارت‌ها',enrich:'غنی‌سازی',export:'خروجی لایتنر',about:'درباره'};
+  document.getElementById('pageTitle').textContent=titles[currentTab]||'';
+  const c=document.getElementById('content');
+  ({import:renderImport,cards:renderCards,enrich:renderEnrich,export:renderExport,about:renderAbout}[currentTab]||renderImport)(c);
+}
+
+// ═══════════════════════════════════════════
+// IMPORT TAB — DOCX Manhattan / PDF / Text
+// ═══════════════════════════════════════════
+let pendingPdf=null;
+function renderImport(c){
+  const pdfName=pendingPdf?pendingPdf.name:'هیچ فایلی انتخاب نشده';
+  c.innerHTML=`
+  <div class="card">
+    <h3 style="margin-bottom:12px">📂 ورود از DOCX (مانند Manhattan 500)</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px">فایل DOCX با ساختار جدولی (Word+POS | ترجمه | تعریف | لحن | مترادف | متضاد) + سطرهای Example/Context/Note</p>
+    <div class="drop-zone" id="docxDrop"><div class="icon">📄</div><p>فایل DOCX اینجا رها کنید یا کلیک کنید</p></div>
+    <input type="file" id="docxInput" accept=".docx" style="display:none">
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">📑 ورود از PDF</h3>
+    <div class="drop-zone" id="pdfDrop" style="padding:20px"><div class="icon">📕</div><p>${esc(pdfName)}</p><p style="font-size:.75rem;color:var(--text2);margin-top:4px">کلیک کنید یا فایل را بکشید</p></div>
+    <input type="file" id="pdfInput" accept=".pdf" style="display:none">
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+      <div><label style="font-size:.76rem;color:var(--text2);display:block;margin-bottom:3px">محدوده صفحات</label><input class="input" id="pdfPages" placeholder="خالی = همه" style="max-width:130px;font-size:.8rem"></div>
+      <div><label style="font-size:.76rem;color:var(--text2);display:block;margin-bottom:3px">حداقل طول کلمه</label><input class="input" type="number" id="pdfMinLen" value="3" min="2" max="15" style="max-width:80px;font-size:.8rem"></div>
+      <div><label style="font-size:.76rem;color:var(--text2);display:block;margin-bottom:3px">حداکثر کلمه</label><input class="input" type="number" id="pdfMaxWords" value="300" min="10" max="5000" style="max-width:90px;font-size:.8rem"></div>
+      <button class="btn btn-primary" id="pdfExtractBtn" ${pendingPdf?'':'disabled'}>🔍 استخراج</button>
+    </div>
+    <div class="progress-bar" id="pdfProg" style="display:none"><div class="progress-fill" id="pdfFill" style="width:0"></div></div>
+    <div id="pdfStatus" style="font-size:.8rem;color:var(--text2);margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">✏️ ورود متن خام</h3>
+    <textarea class="input" id="rawText" placeholder="متن انگلیسی را اینجا paste کنید..."></textarea>
+    <div style="display:flex;gap:10px;align-items:end;margin-top:8px;flex-wrap:wrap">
+      <div><label style="font-size:.76rem;color:var(--text2);display:block;margin-bottom:3px">حداقل طول</label><input class="input" type="number" id="textMinLen" value="3" min="2" max="15" style="max-width:80px;font-size:.8rem"></div>
+      <div><label style="font-size:.76rem;color:var(--text2);display:block;margin-bottom:3px">حداکثر کلمه</label><input class="input" type="number" id="textMaxWords" value="300" min="10" max="5000" style="max-width:90px;font-size:.8rem"></div>
+      <button class="btn btn-primary btn-sm" id="parseTextBtn">🔍 استخراج</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">📋 ورود لیست کلمات</h3>
+    <textarea class="input" id="wordList" placeholder="هر خط یک کلمه:\nephemeral\nubiquitous\npragmatic" style="font-family:monospace"></textarea>
+    <button class="btn btn-primary btn-sm" id="parseListBtn" style="margin-top:8px">افزودن</button>
+  </div>
+  <div id="importStatus" style="margin-top:10px;font-size:.82rem;color:var(--text2)"></div>`;
+
+  // DOCX
+  const docxDrop=document.getElementById('docxDrop');
+  const docxInput=document.getElementById('docxInput');
+  docxDrop.onclick=()=>docxInput.click();
+  docxDrop.ondragover=e=>{e.preventDefault();docxDrop.classList.add('drag-over')};
+  docxDrop.ondragleave=()=>docxDrop.classList.remove('drag-over');
+  docxDrop.ondrop=e=>{e.preventDefault();docxDrop.classList.remove('drag-over');if(e.dataTransfer.files[0])parseDocxFile(e.dataTransfer.files[0])};
+  docxInput.onchange=e=>{if(e.target.files[0])parseDocxFile(e.target.files[0])};
+
+  // PDF
+  const pdfDrop=document.getElementById('pdfDrop');
+  const pdfInput=document.getElementById('pdfInput');
+  pdfDrop.onclick=()=>pdfInput.click();
+  pdfDrop.ondragover=e=>{e.preventDefault();pdfDrop.classList.add('drag-over')};
+  pdfDrop.ondragleave=()=>pdfDrop.classList.remove('drag-over');
+  pdfDrop.ondrop=e=>{e.preventDefault();pdfDrop.classList.remove('drag-over');if(e.dataTransfer.files[0])selectPdf(e.dataTransfer.files[0])};
+  pdfInput.onchange=e=>{if(e.target.files[0])selectPdf(e.target.files[0])};
+  document.getElementById('pdfExtractBtn').onclick=extractPdf;
+
+  // Text
+  document.getElementById('parseTextBtn').onclick=parseRawText;
+  document.getElementById('parseListBtn').onclick=parseWordList;
+}
+
+function selectPdf(file){
+  pendingPdf=file;
+  renderImport(document.getElementById('content'));
+}
+
+// ═══════════════════════════════════════════
+// DOCX PARSER — Manhattan 500 structured table
+// ═══════════════════════════════════════════
+async function parseDocxFile(file){
+  const status=document.getElementById('importStatus');
+  status.textContent='در حال پردازش '+file.name+'...';
+  try{
+    const buf=await file.arrayBuffer();
+    const zip=await JSZip.loadAsync(buf);
+    const xml=await zip.file('word/document.xml').async('text');
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(xml,'text/xml');
+    const tables=doc.querySelectorAll('tbl');
+    if(!tables.length){status.textContent='جدولی یافت نشد';return}
+
+    const table=tables[0];
+    const rows=table.querySelectorAll('tr');
+    const parsed=[];
+    sourceName=file.name.replace(/\.docx$/i,'');
+
+    for(let i=1;i<rows.length;i++){
+      const cells=rows[i].querySelectorAll('tc');
+      if(cells.length<6)continue;
+      const col0=getCellText(cells[0]);
+      const col1=getCellText(cells[1]);
+      const col2=getCellText(cells[2]);
+      const col3=getCellText(cells[3]);
+      const col4=getCellText(cells[4]);
+      const col5=getCellText(cells[5]);
+
+      // Parse word + POS + pronunciation from col0
+      let word='',pos='',pronunciation='';
+      const m=col0.match(/^([a-zA-Z']+)\s*\((verb|noun|adj|adv|adjective|adverb|noun,\s*verb|verb,\s*noun)\)\s*\|?\s*(.*)/i);
+      if(m){word=m[1].toLowerCase();pos=m[2].toLowerCase();pronunciation=(m[3]||'').trim()}
+      else{
+        const m2=col0.match(/^([a-zA-Z']+)\s*\(([^)]+)\)/);
+        if(m2){word=m2[1].toLowerCase();pos=m2[2].trim()}
+        else if(/^[a-zA-Z']+$/.test(col0.trim())){word=col0.trim().toLowerCase()}
+        else continue;
+      }
+
+      // Parse metadata rows (Example, Context, Note/Trap)
+      let examples='',context='',note='',trap='';
+      for(let j=i+1;j<rows.length;j++){
+        const mc=rows[j].querySelectorAll('tc');
+        if(mc.length<2)break;
+        const label=getCellText(mc[0]);
+        const content=getCellText(mc[1]);
+        if(/Example/i.test(label)){examples=content}
+        else if(/Context/i.test(label)){context=content}
+        else if(/Note|Trap/i.test(label)){
+          const trapM=content.match(/Trap\s*:?\s*(.+)/i);
+          if(trapM){trap=trapM[1].trim();note=content.replace(/Trap\s*:?\s*.*/i,'').replace(/Note\s*:?\s*/i,'').trim()}
+          else{note=content.replace(/Note\s*:?\s*/i,'').trim()}
+        }
+        else break; // next word entry
+      }
+
+      // Parse synonyms & antonyms from cols 4 & 5
+      const synonyms=col4.split(/[;,]/).map(s=>s.trim()).filter(s=>s.length>1&&s.length<40);
+      const antonyms=col5.split(/[;,]/).map(s=>s.trim()).filter(s=>s.length>1&&s.length<40);
+
+      // Parse examples into array
+      const exArr=examples?examples.split(/[.!?]\s+(?=[A-Z])/).map(s=>s.trim()).filter(s=>s.length>5).slice(0,3):[];
+
+      // Parse collocations from context
+      const collocs=context?context.split(/[;,|]/).map(s=>s.trim()).filter(s=>s.length>2&&s.length<80).slice(0,5):[];
+
+      parsed.push(makeLeitnerCard({
+        word,translation:col1.trim(),ipa:pronunciation,partOfSpeech:pos,
+        coreMeaning:col2.trim(),definitions:col2.trim()?col2.split(/[;.]/).map(s=>s.trim()).filter(s=>s.length>3).slice(0,4):[],
+        examples:exArr,context:context.slice(0,300),collocations:collocs,
+        synonyms:synonyms.slice(0,6),antonyms:antonyms.slice(0,6),
+        note:note.slice(0,500),trap:trap.slice(0,500),
+        source:sourceName
+      }));
+    }
+
+    // Merge with existing (case-insensitive dedupe)
+    const existing=new Set(cards.map(c=>c.word.toLowerCase()));
+    const fresh=parsed.filter(c=>!existing.has(c.word.toLowerCase()));
+    cards.push(...fresh);
+    saveCards();
+    status.textContent=`✅ ${parsed.length} کلمه استخراج شد (${fresh.length} جدید، ${parsed.length-fresh.length} تکراری)`;
+    toast(parsed.length+' کلمه از DOCX استخراج شد','success');
+  }catch(e){status.textContent='❌ خطا: '+e.message;console.error(e)}
+}
+
+function getCellText(cell){
+  const texts=cell.getElementsByTagName('w:t');
+  let t='';for(let i=0;i<texts.length;i++)t+=texts[i].textContent;
+  // Also get paragraph breaks
+  const brs=cell.getElementsByTagName('w:p');
+  let result='';
+  for(let i=0;i<brs.length;i++){
+    const ts=brs[i].getElementsByTagName('w:t');
+    let line='';for(let j=0;j<ts.length;j++)line+=ts[j].textContent;
+    if(line.trim()){if(result)result+='\n';result+=line.trim()}
+  }
+  return result||t;
+}
+
+// ═══════════════════════════════════════════
+// PDF PARSER
+// ═══════════════════════════════════════════
+async function extractPdf(){
+  if(!pendingPdf)return;
+  const status=document.getElementById('pdfStatus');
+  const prog=document.getElementById('pdfProg');
+  const fill=document.getElementById('pdfFill');
+  const btn=document.getElementById('pdfExtractBtn');
+  btn.disabled=true;prog.style.display='block';
+  status.textContent='در حال خواندن '+pendingPdf.name+'...';
+  try{
+    const buf=await pendingPdf.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const pagesStr=document.getElementById('pdfPages').value.trim();
+    const pageRange=parsePageRange(pagesStr,pdf.numPages);
+    const minLen=parseInt(document.getElementById('pdfMinLen').value)||3;
+    const maxWords=parseInt(document.getElementById('pdfMaxWords').value)||300;
+    let text='';
+    const totalPages=pageRange?pageRange.length:pdf.numPages;
+    let done=0;
+    for(let i=1;i<=pdf.numPages;i++){
+      if(pageRange&&!pageRange.includes(i))continue;
+      const p=await pdf.getPage(i);
+      const tc=await p.getTextContent();
+      text+=tc.items.map(x=>x.str).join(' ')+' ';
+      done++;
+      fill.style.width=((done/totalPages)*80)+'%';
+      status.textContent=`صفحه ${done}/${totalPages}`;
+    }
+    addWordsFromText(text,pendingPdf.name.replace(/\.pdf$/i,''),minLen,maxWords);
+    fill.style.width='100%';
+    status.textContent='✅ استخراج کامل شد';
+  }catch(e){status.textContent='❌ خطا: '+e.message}
+  finally{btn.disabled=false;setTimeout(()=>{prog.style.display='none'},2000)}
+}
+
+function parsePageRange(str,total){
+  if(!str)return null;
+  const pages=new Set();
+  str.split(',').forEach(p=>{p=p.trim();if(p.includes('-')){const[a,b]=p.split('-').map(Number);for(let i=a;i<=b;i++)if(i>=1&&i<=total)pages.add(i)}else{const n=Number(p);if(n>=1&&n<=total)pages.add(n)}});
+  return pages.size?[...pages]:null;
+}
+
+function parseRawText(){
+  const text=document.getElementById('rawText').value;
+  if(!text.trim()){toast('متنی وارد نشده','error');return}
+  const minLen=parseInt(document.getElementById('textMinLen').value)||3;
+  const maxWords=parseInt(document.getElementById('textMaxWords').value)||300;
+  addWordsFromText(text,'متن ورودی',minLen,maxWords);
+}
+
+function parseWordList(){
+  const text=document.getElementById('wordList').value;
+  if(!text.trim()){toast('لیستی وارد نشده','error');return}
+  const words=text.split(/[\n,]+/).map(w=>w.trim()).filter(w=>/^[a-zA-Z]{2,}$/.test(w));
+  const existing=new Set(cards.map(c=>c.word.toLowerCase()));
+  let added=0;
+  words.forEach(w=>{const k=w.toLowerCase();if(!existing.has(k)){cards.push(makeLeitnerCard({word:w,source:'لیست دستی'}));existing.add(k);added++}});
+  saveCards();
+  const status=document.getElementById('importStatus');
+  status.textContent=`✅ ${added} کلمه اضافه شد`;
+  toast(added+' کلمه اضافه شد','success');
+}
+
+function addWordsFromText(text,source,minLen,maxWords){
+  minLen=minLen||3;maxWords=maxWords||300;
+  const STOP=new Set('the and for are but not you all can had her was one our out has his how its may new now old see way who did get let say she too use this that with have from they been said each which their will other about many then them would like so these long make thing him two look more go come could time very when made after back only much just over such take year some what into than also well were your being first does done down even every find give good great here high home keep last left life line live love most must need next part place point right same show small start state still tell turn under want work young around because before between both children country course different during early enough eye face family far feel few food four free full general group grow hand happen happy hard head hear heart help horse house however idea important inner island join kind king know land language large late lead leave less list lose lot low man material matter mean measure mind moment music nation nature near never night north notice obtain often once open order page paint paper pay percent perhaps period plan pound power prepare present president pretty problem program project provide public pull purpose push put rest result road rock role round rule school search second seem sense serve set several short shoulder side since smile society soldier some soon sort sound south space spend sport stay stop story study subject success suggest support sure surprise table talk than their them themselves then there these they thing this those though thought thousand through together toward travel tree true unit upon usual value voice wait walk war warm watch week west whole whose why wide wife will without wonder word world write wrong yard young able across although appear behind big body build change close'.split(' '));
+  const words=text.match(/[a-zA-Z]+/g)||[];
+  const countMap={},originalCase={};
+  words.forEach(w=>{const wl=w.toLowerCase();if(wl.length>=minLen&&!STOP.has(wl)){countMap[wl]=(countMap[wl]||0)+1;if(!originalCase[wl])originalCase[wl]=w}});
+  const sorted=Object.entries(countMap).sort((a,b)=>b[1]-a[1]).slice(0,maxWords);
+  const existing=new Set(cards.map(c=>c.word.toLowerCase()));
+  let added=0;
+  sorted.forEach(([wl])=>{if(!existing.has(wl)){cards.push(makeLeitnerCard({word:originalCase[wl]||wl,source}));existing.add(wl);added++}});
+  saveCards();
+  toast(added+' کلمه جدید اضافه شد','success');
+}
+
+// ═══════════════════════════════════════════
+// CARDS TAB
+// ═══════════════════════════════════════════
+let cardPage=0,cardPageSize=30;
+function renderCards(c){
+  cardPage=0;
+  c.innerHTML=`
+  <div class="stat-grid">
+    <div class="stat-card"><div class="val">${cards.length}</div><div class="lbl">کل کارت‌ها</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--success)">${cards.filter(c=>c.definitions.length).length}</div><div class="lbl">با تعریف</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--warning)">${cards.filter(c=>c.translation).length}</div><div class="lbl">ترجمه‌شده</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent)">${cards.filter(c=>c.synonyms.length).length}</div><div class="lbl">با مترادف</div></div>
+  </div>
+  <div class="filter-bar">
+    <input class="input" placeholder="🔍 جستجو..." id="cardFilter" style="max-width:200px">
+    <select class="input" id="cardStatus" style="max-width:150px"><option value="">همه</option><option value="complete">کامل</option><option value="incomplete">ناقص</option></select>
+    <select class="input" id="cardPageSize" style="max-width:100px"><option value="20">20</option><option value="30" selected>30</option><option value="50">50</option><option value="100">100</option><option value="9999">همه</option></select>
+    <button class="btn btn-sm btn-danger" id="clearAllBtn">🗑 حذف همه</button>
+    <span style="color:var(--text2);font-size:.78rem" id="cardCount"></span>
+  </div>
+  <div id="cardPager"></div>
+  <div id="cardsList"></div>`;
+
+  function getFilteredList(){
+    const filter=(document.getElementById('cardFilter').value||'').toLowerCase();
+    const status=document.getElementById('cardStatus').value;
+    let list=cards;
+    if(filter)list=list.filter(c=>c.word.includes(filter)||(c.translation||'').toLowerCase().includes(filter));
+    if(status==='complete')list=list.filter(c=>c.definitions.length&&c.translation);
+    else if(status==='incomplete')list=list.filter(c=>!c.definitions.length||!c.translation);
+    return list;
+  }
+
+  function renderPager(total){
+    const totalPages=Math.ceil(total/cardPageSize);
+    const el=document.getElementById('cardPager');
+    if(totalPages<=1){el.innerHTML='';return}
+    let h='<div style="display:flex;gap:4px;align-items:center;justify-content:center;margin-bottom:12px;flex-wrap:wrap">';
+    h+='<button class="btn btn-sm btn-ghost" data-pg="prev" '+(cardPage===0?'disabled':'')+'>◀</button>';
+    const start=Math.max(0,cardPage-2);
+    const end=Math.min(totalPages,start+5);
+    for(let i=start;i<end;i++){
+      h+='<button class="btn btn-sm '+(i===cardPage?'btn-primary':'btn-ghost')+'" data-pg="'+i+'">'+(i+1)+'</button>';
+    }
+    if(end<totalPages)h+='<span style="color:var(--text2);font-size:.78rem">...</span>';
+    h+='<button class="btn btn-sm btn-ghost" data-pg="next" '+(cardPage>=totalPages-1?'disabled':'')+'>▶</button>';
+    h+='<span style="color:var(--text2);font-size:.78rem;margin-right:8px">صفحه '+(cardPage+1)+' از '+totalPages+'</span>';
+    h+='</div>';
+    el.innerHTML=h;
+    el.querySelectorAll('[data-pg]').forEach(btn=>{
+      btn.onclick=()=>{
+        const pg=btn.dataset.pg;
+        if(pg==='prev')cardPage=Math.max(0,cardPage-1);
+        else if(pg==='next')cardPage=Math.min(totalPages-1,cardPage+1);
+        else cardPage=parseInt(pg);
+        refresh();
+      };
+    });
+  }
+
+  function refresh(){
+    const list=getFilteredList();
+    const total=list.length;
+    document.getElementById('cardCount').textContent=total+' کارت';
+    const totalPages=Math.ceil(total/cardPageSize);
+    if(cardPage>=totalPages)cardPage=Math.max(0,totalPages-1);
+    const start=cardPage*cardPageSize;
+    const pageItems=list.slice(start,start+cardPageSize);
+    renderPager(total);
+    const el=document.getElementById('cardsList');
+    if(!pageItems.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2)">کارتی یافت نشد</div>';return}
+    el.innerHTML=pageItems.map((w)=>{
+      const idx=cards.indexOf(w);
+      return`<div class="card-item" data-idx="${idx}">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div><span class="word">${esc(w.word)}</span>${w.partOfSpeech?`<span class="pos">${esc(w.partOfSpeech)}</span>`:''}${w.ipa?`<span class="pos">${esc(w.ipa)}</span>`:''}
+          <div class="trans">${esc(w.translation||'—')}</div></div>
+          <div style="display:flex;gap:3px">
+            <button class="btn btn-sm btn-ghost" data-act="speak">🔊</button>
+            <button class="btn btn-sm btn-ghost" data-act="edit">✏️</button>
+            <button class="btn btn-sm btn-ghost" data-act="del" style="color:var(--danger)">🗑</button>
+          </div>
+        </div>
+        ${w.definitions[0]?`<div class="def">${esc(w.definitions[0])}</div>`:''}
+        ${w.synonyms.length?`<div style="margin-top:3px">${w.synonyms.slice(0,4).map(s=>`<span class="tag">${esc(s)}</span>`).join('')}</div>`:''}
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-act="del"]').forEach(btn=>{btn.onclick=e=>{e.stopPropagation();const idx=parseInt(btn.closest('.card-item').dataset.idx);if(confirm('حذف «'+cards[idx].word+'»؟')){cards.splice(idx,1);saveCards();refresh();toast('حذف شد','success')}}});
+    el.querySelectorAll('[data-act="speak"]').forEach(btn=>{btn.onclick=e=>{e.stopPropagation();speakWord(cards[parseInt(btn.closest('.card-item').dataset.idx)].word)}});
+    el.querySelectorAll('[data-act="edit"]').forEach(btn=>{btn.onclick=e=>{e.stopPropagation();openEditModal(parseInt(btn.closest('.card-item').dataset.idx),refresh)}});
+  }
+  refresh();
+  document.getElementById('cardFilter').oninput=()=>{cardPage=0;refresh()};
+  document.getElementById('cardStatus').onchange=()=>{cardPage=0;refresh()};
+  document.getElementById('cardPageSize').onchange=function(){cardPageSize=parseInt(this.value);cardPage=0;refresh()};
+  document.getElementById('clearAllBtn').onclick=()=>{if(confirm('حذف همه؟')){cards=[];saveCards();refresh();toast('حذف شد','success')}};
+}
+
+function openEditModal(idx,refresh){
+  const card=cards[idx];
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML=`<div style="background:var(--card);border-radius:var(--radius);padding:20px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;border:1px solid var(--border)">
+    <h3 style="margin-bottom:12px">✏️ ${esc(card.word)}</h3>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">ترجمه</label><input class="input" id="eTrans" value="${esc(card.translation)}"></div>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">تعریف انگلیسی</label><textarea class="input" id="eDefs" rows="2">${esc((card.definitions||[]).join('\n'))}</textarea></div>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">مثال</label><textarea class="input" id="eEx" rows="2">${esc((card.examples||[]).join('\n'))}</textarea></div>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">مترادف (جدا شده با ;)</label><input class="input" id="eSyn" value="${esc((card.synonyms||[]).join('; '))}"></div>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">متضاد</label><input class="input" id="eAnt" value="${esc((card.antonyms||[]).join('; '))}"></div>
+    <div style="margin-bottom:8px"><label style="font-size:.78rem;color:var(--text2)">یادداشت</label><textarea class="input" id="eNote" rows="2">${esc(card.note)}</textarea></div>
+    <div style="margin-bottom:12px"><label style="font-size:.78rem;color:var(--text2)">نکته مهم (Trap)</label><input class="input" id="eTrap" value="${esc(card.trap)}"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" id="eCancel">لغو</button>
+      <button class="btn btn-primary" id="eSave">ذخیره</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#eCancel').onclick=()=>ov.remove();
+  ov.querySelector('#eSave').onclick=()=>{
+    card.translation=ov.querySelector('#eTrans').value;
+    card.definitions=ov.querySelector('#eDefs').value.split('\n').filter(s=>s.trim());
+    card.examples=ov.querySelector('#eEx').value.split('\n').filter(s=>s.trim());
+    card.synonyms=ov.querySelector('#eSyn').value.split(';').map(s=>s.trim()).filter(s=>s);
+    card.antonyms=ov.querySelector('#eAnt').value.split(';').map(s=>s.trim()).filter(s=>s);
+    card.note=ov.querySelector('#eNote').value;
+    card.trap=ov.querySelector('#eTrap').value;
+    saveCards();
+    ov.remove();refresh();toast('ذخیره شد','success');
+  };
+  ov.onclick=e=>{if(e.target===ov)ov.remove()};
+}
+
+// ═══════════════════════════════════════════
+// ENRICH TAB — Dictionary + Translation
+// ═══════════════════════════════════════════
+async function renderEnrich(c){
+  const needDict=cards.filter(c=>!c.definitions.length);
+  const needTrans=cards.filter(c=>!c.translation);
+  const enriched=cards.length-needDict.length;
+  const translated=cards.length-needTrans.length;
+  c.innerHTML=`
+  <div class="stat-grid">
+    <div class="stat-card"><div class="val" style="color:var(--success)">${enriched}</div><div class="lbl">غنی‌شده</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--accent)">${needDict.length}</div><div class="lbl">نیاز به غنی‌سازی</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--success)">${translated}</div><div class="lbl">ترجمه‌شده</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--warning)">${needTrans.length}</div><div class="lbl">نیاز به ترجمه</div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">🔍 جستجوی تعریف از DictionaryAPI</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px">تعریف، تلفظ، POS، مترادف و متضاد دریافت می‌کند. نتایج کش می‌شوند — دوباره‌پردازی نمی‌شوند.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" id="enrichAllBtn">🔍 غنی‌سازی ${needDict.length} کلمه</button>
+      <button class="btn btn-danger btn-sm" id="enrichStopBtn" style="display:none">⏹ توقف</button>
+      <span style="font-size:.78rem;color:var(--text2);margin-right:auto">${enriched} از ${cards.length} کامل</span>
+    </div>
+    <div class="progress-bar" id="enrichProg" style="display:none"><div class="progress-fill" id="enrichFill" style="width:0"></div></div>
+    <div id="enrichStatus" style="font-size:.8rem;color:var(--text2);margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">🌐 ترجمه فارسی</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px">ترجمه بر اساس معنی انگلیسی کلمه (نه فقط کلمه به کلمه). نتایج کش می‌شوند.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" id="transAllBtn">🌐 ترجمه ${needTrans.length} کلمه</button>
+      <button class="btn btn-danger btn-sm" id="transStopBtn" style="display:none">⏹ توقف</button>
+      <span style="font-size:.78rem;color:var(--text2);margin-right:auto">${translated} از ${cards.length} کامل</span>
+    </div>
+    <div class="progress-bar" id="transProg" style="display:none"><div class="progress-fill" id="transFill" style="width:0"></div></div>
+    <div id="transStatus" style="font-size:.8rem;color:var(--text2);margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">✏️ ترجمه دستی</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px">ترجمه بر اساس معنی انگلیسی — اگر کلمه چند معنی دارد، معنی مناسب GRE را وارد کنید</p>
+    <div id="manualTransList" style="max-height:300px;overflow-y:auto"></div>
+  </div>
+  <div class="card" style="border-color:var(--border)">
+    <h3 style="margin-bottom:8px;font-size:.9rem">🗑 مدیریت کش</h3>
+    <p style="font-size:.78rem;color:var(--text2);margin-bottom:8px">کش ذخیره‌سازی: نتایج غنی‌سازی و ترجمه ذخیره می‌شوند تا دوباره پردازش نشوند.</p>
+    <button class="btn btn-ghost btn-sm" id="clearCacheBtn">🗑 پاک کردن کش</button>
+  </div>`;
+
+  document.getElementById('enrichAllBtn').onclick=()=>enrichCards(needDict);
+  document.getElementById('transAllBtn').onclick=()=>translateCards(needTrans);
+  document.getElementById('clearCacheBtn').onclick=async function(){
+    if(!confirm('پاک کردن کش؟ دفعه بعد غنی‌سازی و ترجمه دوباره انجام می‌شود.'))return;
+    try{
+      const db=await openDB();
+      const tx=db.transaction(IDB_CACHE,'readwrite');
+      tx.objectStore(IDB_CACHE).clear();
+      tx.oncomplete=function(){toast('کش پاک شد','success');render()};
+    }catch(e){toast('خطا','error')}
+  };
+  renderManualTransList();
+}
+
+function renderManualTransList(){
+  const el=document.getElementById('manualTransList');
+  if(!el)return;
+  const need=cards.filter(c=>!c.translation||c.translation==='—');
+  if(!need.length){el.innerHTML='<p style="color:var(--text2);font-size:.82rem">همه کلمات ترجمه دارند ✅</p>';return}
+  el.innerHTML=need.slice(0,50).map((c,i)=>{
+    const idx=cards.indexOf(c);
+    return`<div style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-weight:600;min-width:100px;font-size:.85rem">${esc(c.word)}</span>
+      <span style="font-size:.75rem;color:var(--text2);min-width:150px">${esc((c.definitions[0]||'').slice(0,60))}</span>
+      <input class="input" placeholder="ترجمه فارسی" data-idx="${idx}" style="flex:1;font-size:.82rem;padding:5px 8px">
+      <button class="btn btn-sm btn-success" data-save="${idx}">✓</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-save]').forEach(btn=>{
+    btn.onclick=()=>{
+      const idx=parseInt(btn.dataset.save);
+      const input=el.querySelector(`input[data-idx="${idx}"]`);
+      if(input&&input.value.trim()){cards[idx].translation=input.value.trim();saveCards();toast('ذخیره شد','success');input.value='';renderManualTransList()}
+    };
+  });
+}
+
+// ═══ SMART WORD RESOLVER ═══
+// Tries multiple forms of a word to find it in the dictionary
+function getWordVariants(word){
+  const w=word.toLowerCase().trim();
+  const variants=[w];
+  // Multi-word: try first word only
+  if(w.includes(' ')){variants.push(w.split(/\s+/)[0])}
+  // Suffix stripping for common English morphology
+  if(w.endsWith('ing')){variants.push(w.slice(0,-3),w.slice(0,-3)+'e',w.slice(0,-4))} // castigating→castigate, making→make
+  if(w.endsWith('tion')){variants.push(w.slice(0,-4)+'te',w.slice(0,-4)+'t')} // education→educate
+  if(w.endsWith('ment')){variants.push(w.slice(0,-4))} // admonishment→admonish
+  if(w.endsWith('ness')){variants.push(w.slice(0,-4))} // kindness→kind
+  if(w.endsWith('ity')){variants.push(w.slice(0,-3)+'e',w.slice(0,-3)+'y')} // ferocity→feroce/ferocy
+  if(w.endsWith('ence')){variants.push(w.slice(0,-4)+'d')} // adherence→adhere
+  if(w.endsWith('ance')){variants.push(w.slice(0,-4)+'e')} // reluctance→relucte
+  if(w.endsWith('ly')){variants.push(w.slice(0,-2))} // quickly→quick
+  if(w.endsWith('ed')){variants.push(w.slice(0,-2),w.slice(0,-1))} // castigated→castigate/castigat
+  if(w.endsWith('er')){variants.push(w.slice(0,-2),w.slice(0,-2)+'e')} // bigger→big
+  if(w.endsWith('es')){variants.push(w.slice(0,-2),w.slice(0,-1))} // processes→process
+  if(w.endsWith('s')&&!w.endsWith('ss')){variants.push(w.slice(0,-1))} // words→word
+  if(w.endsWith('ful')){variants.push(w.slice(0,-3))} // beautiful→beauty
+  if(w.endsWith('ous')){variants.push(w.slice(0,-3))} // dangerous→danger
+  if(w.endsWith('ive')){variants.push(w.slice(0,-3)+'e',w.slice(0,-3)+'d')} // creative→create
+  if(w.endsWith('able')){variants.push(w.slice(0,-4),w.slice(0,-4)+'e')} // manageable→manage
+  if(w.endsWith('ible')){variants.push(w.slice(0,-4))} // accessible→access
+  // Deduplicate
+  return[...new Set(variants)].filter(v=>v.length>=2);
+}
+
+async function lookupDict(word){
+  // Check cache first
+  const cached=await getCachedDict(word);
+  if(cached&&cached.data)return cached.data;
+  const variants=getWordVariants(word);
+  let result=null;
+  // Source 1: dictionaryapi.dev
+  for(const v of variants){
+    try{
+      const resp=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(v));
+      if(resp.ok){const data=await resp.json();if(data&&Array.isArray(data)&&data.length){result={src:'dict',data:data[0]};break}}
+    }catch(e){}
+  }
+  // Source 2: Wiktionary REST API (much better GRE coverage)
+  if(!result){
+    for(const v of variants){
+      try{
+        const resp=await fetch('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(v));
+        if(!resp.ok)continue;
+        const data=await resp.json();
+        if(!data||!data.en||!data.en.length)continue;
+        const defs=[],exs=[];
+        let pos='';
+        for(const section of data.en){
+          if(section.partOfSpeech&&!pos)pos=section.partOfSpeech;
+          for(const d of section.definitions||[]){
+            if(d.definition){
+              const clean=d.definition.replace(/<[^>]+>/g,'').trim();
+              if(clean)defs.push(clean);
+            }
+            if(d.examples){
+              for(const ex of d.examples){
+                const clean=ex.replace(/<[^>]+>/g,'').trim();
+                if(clean)exs.push(clean);
+              }
+            }
+          }
+        }
+        if(defs.length){result={src:'wiktionary',data:{phonetic:'',pos,definitions:defs.slice(0,5),examples:exs.slice(0,4),synonyms:[],antonyms:[]}};break}
+      }catch(e){}
+    }
+  }
+  // Source 3: Datamuse API (word relationships — synonyms/related)
+  if(!result){
+    for(const v of variants){
+      try{
+        const[defsResp,synResp]=await Promise.all([
+          fetch('https://api.datamuse.com/words?sp='+encodeURIComponent(v)+'&md=d&max=1'),
+          fetch('https://api.datamuse.com/words?rel_syn='+encodeURIComponent(v)+'&max=8')
+        ]);
+        const defsData=await defsResp.json();
+        const synData=await synResp.json();
+        if(defsData&&defsData.length&&defsData[0].defs&&defsData[0].defs.length){
+          const defs=defsData[0].defs.map(d=>{const parts=d.split('\t');return(parts[1]||d).trim()});
+          const syns=synData.map(s=>s.word);
+          result={src:'datamuse',data:{phonetic:'',pos:defsData[0].tags?defsData[0].tags.find(t=>['n','v','adj','adv'].includes(t))||'':'',definitions:defs.slice(0,5),examples:[],synonyms:syns,antonyms:[]}};
+          break;
+        }
+      }catch(e){}
+    }
+  }
+  // Cache the result
+  if(result)await setCachedDict(word,result);
+  return result;
+}
+
+async function enrichCards(list){
+  if(!list.length){toast('همه کلمات تعریف دارند','info');return}
+  const prog=document.getElementById('enrichProg');
+  const fill=document.getElementById('enrichFill');
+  const status=document.getElementById('enrichStatus');
+  const stopBtn=document.getElementById('enrichStopBtn');
+  prog.style.display='block';stopBtn.style.display='inline-flex';
+  let done=0,aborted=false;
+  stopBtn.onclick=()=>aborted=true;
+  // BATCH=8 + delay: keeps free APIs happy (429 protection)
+  const BATCH=8;
+  const notFoundWords=[];
+  for(let i=0;i<list.length;i+=BATCH){
+    if(aborted)break;
+    const batch=list.slice(i,i+BATCH);
+    status.textContent=`${i+1}-${Math.min(i+BATCH,list.length)} از ${list.length} (${done} یافت شد)`;
+    fill.style.width=((i/list.length)*100)+'%';
+    await Promise.allSettled(batch.map(async card=>{
+      try{
+        const result=await lookupDict(card.word);
+        if(!result){notFoundWords.push(card.word);return}
+        const entry=result.data;
+        let D=[],E=[],S=[],A=[];
+        if(result.src==='dict'){
+          for(const p of entry.phonetics||[]){if(p.text){card.ipa=p.text;break}}
+          for(const m of entry.meanings||[]){
+            card.partOfSpeech=card.partOfSpeech||m.partOfSpeech||'';
+            for(const d of m.definitions||[]){if(d.definition)D.push(d.definition);if(d.example)E.push(d.example)}
+            S.push(...(m.synonyms||[]));A.push(...(m.antonyms||[]));
+          }
+        }else{
+          if(entry.pos)card.partOfSpeech=card.partOfSpeech||entry.pos;
+          D.push(...(entry.definitions||[]));
+          E.push(...(entry.examples||[]));
+          S.push(...(entry.synonyms||[]));
+          A.push(...(entry.antonyms||[]));
+        }
+        if(!card.definitions.length)card.definitions=D.slice(0,5);
+        if(!card.examples.length)card.examples=E.slice(0,4);
+        if(!card.synonyms.length)card.synonyms=[...new Set(S)].slice(0,8);
+        if(!card.antonyms.length)card.antonyms=[...new Set(A)].slice(0,6);
+        if(!card.coreMeaning&&D[0])card.coreMeaning=D[0].slice(0,200);
+        done++;
+      }catch(e){}
+    }));
+    // Save progress every 5 batches
+    if((i/BATCH)%5===4)saveCards();
+    if(i+BATCH<list.length)await new Promise(r=>setTimeout(r,250));
+  }
+  saveCards();
+  fill.style.width='100%';
+  const nfHtml=notFoundWords.length?`<div style="margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;font-size:.78rem"><strong style="color:var(--danger)">یافت نشد (${notFoundWords.length}):</strong><div style="margin-top:4px;color:var(--text2)">${notFoundWords.map(w=>'<span style="margin-left:6px">'+esc(w)+'</span>').join('')}</div></div>`:'';
+  status.innerHTML=aborted?'متوقف شد':`✅ ${done} یافت شد — ❌ ${notFoundWords.length} یافت نشد`+nfHtml;
+  stopBtn.style.display='none';
+  toast(done+' یافت شد، '+notFoundWords.length+' یافت نشد','success');
+}
+
+// Translation cache
+const transCache={};
+const transFailed=new Set();
+let _transApiStatus={mymemory:'unknown',lastError:'',cooldownUntil:0};
+
+async function translateWord(word){
+  if(transCache[word])return transCache[word];
+  if(transFailed.has(word))return'';
+  // Check IDB cache
+  const cached=await getCachedTrans(word);
+  if(cached&&cached.data){transCache[word]=cached.data;return cached.data}
+
+  // Try MyMemory first (recover from cooldown after 60s)
+  if(_transApiStatus.mymemory==='dead'&&Date.now()>_transApiStatus.cooldownUntil){
+    _transApiStatus.mymemory='unknown'; // retry
+  }
+  if(_transApiStatus.mymemory!=='dead'){
+    try{
+      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(word)+'&langpair=en|fa';
+      const resp=await fetch(url);
+      if(!resp.ok){
+        _transApiStatus.mymemory='dead';
+        _transApiStatus.lastError='HTTP '+resp.status;
+        _transApiStatus.cooldownUntil=Date.now()+60000;
+      }else{
+        const data=await resp.json();
+        let result=data?.responseData?.translatedText||'';
+        if(data.responseStatus===429||data.responseStatus===403){
+          _transApiStatus.mymemory='dead';
+          _transApiStatus.lastError='Rate limited';
+          _transApiStatus.cooldownUntil=Date.now()+60000;
+        }else if(result&&!result.includes('MYMEMORY')&&result.toUpperCase()!==word.toUpperCase()&&result.length<200&&result.length>=2){
+          result=result.replace(/\s*\([^)]*[a-zA-Z]{3,}[^)]*\)\s*$/,'').trim();
+          if(result.length>=2){transCache[word]=result;setCachedTrans(word,result);return result}
+        }
+      }
+    }catch(e){
+      _transApiStatus.mymemory='dead';
+      _transApiStatus.lastError=e.message;
+      _transApiStatus.cooldownUntil=Date.now()+60000;
+    }
+  }
+
+  // Fallback: Google Translate (unofficial)
+  try{
+    const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fa&dt=t&q='+encodeURIComponent(word);
+    const resp=await fetch(url);
+    if(resp.ok){
+      const data=await resp.json();
+      if(data&&data[0]){
+        let result=data[0].map(s=>s[0]).join('');
+        if(result&&result.toUpperCase()!==word.toUpperCase()&&result.length>=2){
+          transCache[word]=result;
+          setCachedTrans(word,result);
+          return result;
+        }
+      }
+    }
+  }catch(e){}
+
+  transFailed.add(word);
+  return'';
+}
+
+async function translateCards(list){
+  if(!list.length){toast('همه ترجمه شده‌اند','info');return}
+  const prog=document.getElementById('transProg');
+  const fill=document.getElementById('transFill');
+  const status=document.getElementById('transStatus');
+  const stopBtn=document.getElementById('transStopBtn');
+  prog.style.display='block';stopBtn.style.display='inline-flex';
+  let done=0,aborted=false;
+  stopBtn.onclick=()=>aborted=true;
+  const BATCH=10;
+  const notFoundWords=[];
+  for(let i=0;i<list.length;i+=BATCH){
+    if(aborted)break;
+    const batch=list.slice(i,i+BATCH);
+    status.textContent=`${i+1}-${Math.min(i+BATCH,list.length)} از ${list.length} — ${done} ترجمه شد`;
+    fill.style.width=((i/list.length)*100)+'%';
+    await Promise.allSettled(batch.map(async card=>{
+      try{
+        const t=await translateWord(card.word);
+        if(t){card.translation=t;done++}
+        else notFoundWords.push(card.word);
+      }catch(e){notFoundWords.push(card.word)}
+    }));
+    // Save progress every 5 batches
+    if((i/BATCH)%5===4)saveCards();
+    if(i+BATCH<list.length)await new Promise(r=>setTimeout(r,250));
+    if(i+BATCH<list.length)await new Promise(r=>setTimeout(r,150));
+  }
+  saveCards();
+  fill.style.width='100%';
+  const apiWarn=_transApiStatus.mymemory==='dead'?`<div style="margin-top:6px;color:var(--warning);font-size:.78rem">⚠️ MyMemory غیرفعال: ${esc(_transApiStatus.lastError)} — از Google Translate استفاده شد</div>`:'';
+  const nfHtml=notFoundWords.length?`<div style="margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;font-size:.78rem;max-height:200px;overflow-y:auto"><strong style="color:var(--danger)">ترجمه نشد (${notFoundWords.length}):</strong><div style="margin-top:4px;color:var(--text2)">${notFoundWords.slice(0,50).map(w=>'<span style="margin-left:6px">'+esc(w)+'</span>').join('')}${notFoundWords.length>50?'...':''}</div></div>`:'';
+  status.innerHTML=aborted?'متوقف شد':`✅ ${done} ترجمه شد — ❌ ${notFoundWords.length} نشد`+apiWarn+nfHtml;
+  stopBtn.style.display='none';
+  toast(done+' ترجمه شد، '+notFoundWords.length+' نشد','success');
+}
+
+// ═══════════════════════════════════════════
+// EXPORT TAB — exact Leitner format
+// ═══════════════════════════════════════════
+function renderExport(c){
+  const complete=cards.filter(c=>c.definitions.length);
+  c.innerHTML=`
+  <div class="stat-grid">
+    <div class="stat-card"><div class="val">${cards.length}</div><div class="lbl">کل کارت‌ها</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--success)">${complete.length}</div><div class="lbl">آماده خروجی</div></div>
+  </div>
+  <div class="card" style="border:1px solid var(--accent)">
+    <h3 style="margin-bottom:12px;color:var(--accent)">💾 خروجی JSON برای لایتنر</h3>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">فایل JSON مستقیماً وارد بخش «ورود کلمات» لایتنر کنید.</p>
+    <div style="margin-bottom:10px">
+      <label style="font-size:.82rem;font-weight:600">نام دسته:</label>
+      <input class="input" id="expCategory" value="VocabForge" style="max-width:220px;margin-top:3px">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="expSend">📤 ارسال مستقیم به لایتنر</button>
+      <button class="btn btn-success" id="expDownload">📥 دانلود JSON</button>
+      <button class="btn btn-ghost" id="expCopy">📋 کپی JSON</button>
+    </div>
+    <div id="expSendHint" style="margin-top:8px;font-size:.76rem;color:var(--text2);display:none"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">👁 پیش‌نمایش</h3>
+    <pre style="background:var(--bg);padding:12px;border-radius:10px;font-size:.74rem;max-height:350px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap" id="jsonPreview"></pre>
+  </div>`;
+  updatePreview();
+  document.getElementById('expCategory').onchange=updatePreview;
+  document.getElementById('expDownload').onclick=downloadJSON;
+  document.getElementById('expCopy').onclick=()=>{navigator.clipboard.writeText(getExportJSON());toast('کپی شد','success')};
+  const sendBtn=document.getElementById('expSend');
+  if(sendBtn)sendBtn.onclick=()=>{
+    const complete=cards.filter(c=>c.definitions.length);
+    if(!complete.length){toast('اول کارت‌ها را غنی‌سازی کنید','error');return}
+    const cat=document.getElementById('expCategory')?.value||'VocabForge';
+    const payload=complete.map(c=>({...c,category:cat}));
+    const hint=document.getElementById('expSendHint');
+    try{
+      if(window.parent&&window.parent!==window){
+        window.parent.postMessage({type:'vfa-send-cards',cards:payload,category:cat},'*');
+        if(hint){hint.style.display='block';hint.textContent='✅ '+payload.length+' کارت ارسال شد — در پنجره اصلی لایتنر ادامه دهید'}
+      }else{
+        // Standalone mode: fall back to download
+        const json=getExportJSON();
+        const blob=new Blob([json],{type:'application/json'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=url;a.download='vocabforge_leitner.json';a.click();
+        URL.revokeObjectURL(url);
+        if(hint){hint.style.display='block';hint.textContent='این نسخه مستقیم است — فایل JSON دانلود شد؛ آن را در لایتنر وارد کنید'}
+        toast('فایل JSON دانلود شد','success');
+      }
+    }catch(err){toast('خطا در ارسال: '+err.message,'error')}
+  };
+}
+
+function getExportJSON(){
+  const cat=document.getElementById('expCategory')?.value||'VocabForge';
+  const exportCards=cards.map(c=>{
+    const card={...c,category:cat};
+    return card;
+  });
+  // Full state snapshot format for importStateSnapshot
+  return JSON.stringify({
+    words:exportCards,
+    longTerm:[],
+    categories:[cat,'پیش‌فرض'],
+    _version:1
+  },null,2);
+}
+
+function updatePreview(){
+  const el=document.getElementById('jsonPreview');
+  if(el)el.textContent=getExportJSON().slice(0,3000)+'\n...';
+}
+
+function downloadJSON(){
+  const json=getExportJSON();
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='vocabforge_leitner.json';a.click();
+  URL.revokeObjectURL(url);
+  toast('فایل JSON دانلود شد — در لایتنر بازیابی کنید','success');
+}
+
+// ═══════════════════════════════════════════
+// ABOUT TAB
+// ═══════════════════════════════════════════
+function renderAbout(c){
+  c.innerHTML=`<div class="card" style="text-align:center;max-width:460px;margin:0 auto">
+    <div style="font-size:2.8rem;margin-bottom:8px">⚒️</div>
+    <h2>VocabForge v3.0</h2>
+    <p style="color:var(--text2);font-size:.85rem;margin-bottom:14px">سازنده فلش‌کارت برای لایتنر</p>
+    <div style="text-align:right;padding:12px;background:var(--bg);border-radius:10px;font-size:.82rem;line-height:2">
+      <div>📄 ورود DOCX منهتن ۵۰۰ با تمام فیلدها</div>
+      <div>📕 استخراج از PDF و متن خام</div>
+      <div>🔍 غنی‌سازی خودکار با DictionaryAPI</div>
+      <div>🌐 ترجمه فارسی بر اساس معنی انگلیسی</div>
+      <div>💾 خروجی JSON مستقیم برای لایتنر</div>
+    </div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2)">
+      <div>سازنده: محسن نیک‌سیرت</div>
+      <div><a href="https://t.me/mohsenniksirat" style="color:var(--accent)">@mohsenniksirat</a></div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+applyTheme();
+loadCards().then(function(){render()});
+</script>
+</body>
+</html>
