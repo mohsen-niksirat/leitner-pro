@@ -9098,11 +9098,8 @@ setInterval(checkNotifications,5*60*1000);
 // PWA & OFFLINE
 // ═══════════════════════════════════════════
 if('serviceWorker' in navigator){
-  try{
-    const swCode=`const CACHE_NAME='leitner-v3';const ASSETS=['./leitner.html'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>{if(r)return r;return fetch(e.request).then(resp=>{if(resp&&resp.status===200&&resp.type==='basic'){const clone=resp.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,clone))}return resp}).catch(()=>caches.match('./leitner.html')))})});`;
-    const swBlob=new Blob([swCode],{type:'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'./'}).catch(()=>{});
-  }catch(e){}
+  // حذف سرویس‌کارگر بلاب قدیمی (لیتر قدیمی) اگر ثبت شده باشد
+  try{navigator.serviceWorker.getRegistrations().then(rs=>{rs.forEach(r=>{r.unregister()})}).catch(()=>{})}catch(e){}
 }
 
 // Offline indicator
