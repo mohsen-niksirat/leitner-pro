@@ -598,6 +598,78 @@ window.addEventListener('storage',function(e){
 </script>
 <script>
 // ═══════════════════════════════════════════
+// TAG SYSTEM — برچسب‌گذاری چندگانه
+// ═══════════════════════════════════════════
+let libSelected=new Set(); // شناسه کلمات انتخاب‌شده برای عملیات گروهی
+function toggleLibSelect(id){if(libSelected.has(id))libSelected.delete(id);else libSelected.add(id)}
+function updateBulkBar(c){const bar=document.getElementById('bulkBar');if(!bar)return;bar.style.display=libSelected.size?'flex':'none';const cnt=document.getElementById('bulkCount');if(cnt)cnt.textContent=libSelected.size+' انتخاب'}
+function getAllTags(){const s=new Set();S.words.forEach(w=>(w.tags||[]).forEach(t=>s.add(t)));S.longTerm.forEach(w=>(w.tags||[]).forEach(t=>s.add(t)));return[...s].sort()}
+function tagCount(t){return S.words.filter(w=>(w.tags||[]).includes(t)).length+S.longTerm.filter(w=>(w.tags||[]).includes(t)).length}
+function openTagManager(){
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  function render(){
+    const tags=getAllTags();
+    ov.innerHTML=`<div class="modal" style="max-width:520px">
+      <h3 style="margin-bottom:14px">🏷️ مدیریت برچسب‌ها</h3>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input class="input" id="newTagName" placeholder="نام برچسب جدید..." style="flex:1">
+        <button type="button" class="btn btn-primary btn-sm" id="addTagBtn">افزودن</button>
+      </div>
+      <div style="max-height:380px;overflow-y:auto">
+        ${tags.length?tags.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)">
+          <div><span class="tag" style="font-size:.75rem">${esc(t)}</span> <span style="color:var(--text2);font-size:.75rem">(${tagCount(t)})</span></div>
+          <div style="display:flex;gap:4px">
+            <button type="button" class="btn btn-ghost btn-sm" data-tag-rename="${esc(t)}" style="font-size:.7rem">✏️</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-tag-del="${esc(t)}" style="font-size:.7rem;color:var(--danger)">🗑️</button>
+          </div></div>`).join(''):'<div style="color:var(--text2);text-align:center;padding:20px">برچسبی وجود ندارد</div>'}
+      </div>
+      <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.75rem;color:var(--text2)">برچسب را از ویرایش کلمه یا عملیات گروهی به کلمات بدهید</span>
+        <button type="button" class="btn btn-ghost" id="closeTagMgr">بستن</button>
+      </div>
+    </div>`;
+    ov.querySelector('#addTagBtn').onclick=()=>{const n=ov.querySelector('#newTagName').value.trim();if(!n)return;if(getAllTags().includes(n)){toast('این برچسب وجود دارد','error');return}render();toast('برچسب «'+n+'» آماده است — از عملیات گروهی آن را به کلمات بدهید','success')};
+    ov.querySelector('#newTagName').onkeydown=e=>{if(e.key==='Enter')ov.querySelector('#addTagBtn').click()};
+    ov.querySelectorAll('[data-tag-rename]').forEach(btn=>{btn.onclick=()=>{const old=btn.dataset.tagRename;const nn=prompt('نام جدید برچسب:',old);if(!nn||nn.trim()===old)return;const name=nn.trim();S.words.forEach(w=>{if((w.tags||[]).includes(old)){const i=w.tags.indexOf(old);w.tags[i]=name}});S.longTerm.forEach(w=>{if((w.tags||[]).includes(old)){const i=w.tags.indexOf(old);w.tags[i]=name}});save();render();toast('برچسب تغییر نام یافت','success')}});
+    ov.querySelectorAll('[data-tag-del]').forEach(btn=>{btn.onclick=()=>{const t=btn.dataset.tagDel;const n=tagCount(t);if(!confirm('حذف برچسب «'+t+'» از '+n+' کلمه؟'))return;S.words.forEach(w=>{if(w.tags)w.tags=w.tags.filter(x=>x!==t)});S.longTerm.forEach(w=>{if(w.tags)w.tags=w.tags.filter(x=>x!==t)});save();render();toast('برچسب حذف شد','success')}});
+    ov.querySelector('#closeTagMgr').onclick=()=>{ov.remove();invalidateLibCache();renderLibrary(document.getElementById('content'))};
+  }
+  render();document.body.appendChild(ov);ov.onclick=e=>{if(e.target===ov){ov.remove();invalidateLibCache();renderLibrary(document.getElementById('content'))}};
+}
+function assignTagToIds(ids,tag){let n=0;ids.forEach(id=>{const w=S.words.find(x=>x.id===id);if(w){if(!(w.tags||[]).includes(tag)){w.tags=w.tags||[];w.tags.push(tag);n++}}});if(n){save();invalidateLibCache();toast(n+' کلمه برچسب «'+tag+'» گرفت','success')}else toast('چیزی تغییر نکرد','info')}
+function removeTagFromIds(ids,tag){let n=0;ids.forEach(id=>{const w=S.words.find(x=>x.id===id);if(w&&(w.tags||[]).includes(tag)){w.tags=w.tags.filter(t=>t!==tag);n++}});if(n){save();invalidateLibCache();toast('برچسب از '+n+' کلمه حذف شد','success')}else toast('چیزی تغییر نکرد','info')}
+function bulkAddTagPrompt(){const tag=(prompt('نام برچسب برای افزودن به '+libSelected.size+' کلمه انتخاب‌شده:')||'').trim();if(!tag)return;assignTagToIds([...libSelected],tag);invalidateLibCache();renderLibrary(document.getElementById('content'))}
+function bulkRemoveTagPrompt(){const tag=(prompt('نام برچسب برای حذف از کلمات انتخاب‌شده:')||'').trim();if(!tag)return;removeTagFromIds([...libSelected],tag);invalidateLibCache();renderLibrary(document.getElementById('content'))}
+
+// ═══════════════════════════════════════════
+// ADAPTIVE QUIZ — نشانگر سختی + حالت تطبیقی
+// ═══════════════════════════════════════════
+function quizStrengthLabel(w){const s=getWordStrength(w);return s>=0.7?'قوی 💪':s>=0.4?'متوسط ⚖️':'ضعیف 🎯'}
+function isAdaptiveQuiz(){return S.settings.quizAdaptive!==false}
+
+// ═══════════════════════════════════════════
+// GOOGLE DRIVE SYNC — همگام‌سازی ابری
+// ═══════════════════════════════════════════
+const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILE='leitner-backup.json';
+let _gisTokenClient=null;
+function driveSettings(){if(!S.settings.drive)S.settings.drive={clientId:'243214315942-89m2u9u2kdvkmjr95cjeq24kkhqt2k7s.apps.googleusercontent.com',connected:false,token:'',tokenExpiry:0,autoSync:false,lastSyncAt:null};return S.settings.drive}
+function loadGisLib(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=()=>res();s.onerror=()=>rej(new Error('بارگذاری کتابخانه گوگل ناموفق'));document.head.appendChild(s)})}
+function handleTokenResp(resp,res,rej){const d=driveSettings();if(resp.error){toast('خطا در اتصال: '+resp.error,'error');return rej(new Error(resp.error))}d.token=resp.access_token;d.tokenExpiry=Date.now()+resp.expires_in*1000;d.connected=true;save();toast('اتصال به گوگل درایو برقرار شد ✅','success');res(resp.access_token)}
+function initTokenClient(cb){const d=driveSettings();_gisTokenClient=google.accounts.oauth2.initTokenClient({client_id:d.clientId,scope:DRIVE_SCOPE,callback:cb})}
+function ensureDriveToken(){const d=driveSettings();if(!d.clientId)return Promise.reject('Client ID تنظیم نشده است');if(d.token&&d.tokenExpiry&&Date.now()<d.tokenExpiry-60000)return Promise.resolve(d.token);return new Promise((res,rej)=>{if(!_gisTokenClient)initTokenClient(resp=>handleTokenResp(resp,res,rej));else _gisTokenClient.callback=resp=>handleTokenResp(resp,res,rej);_gisTokenClient.requestAccessToken()})}
+async function driveFindFile(token){const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+encodeURIComponent("name='"+DRIVE_FILE+"'")+'&fields=files(id,name,modifiedTime,size)',{headers:{Authorization:'Bearer '+token}});const j=await r.json();return j&&j.files&&j.files.length?j.files[0]:null}
+async function driveUpload(token,json){const file=await driveFindFile(token);if(file){const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+file.id+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:json});if(!r.ok)throw new Error('آپلود ناموفق');return file.id}const meta={name:DRIVE_FILE,parents:['appDataFolder'],mimeType:'application/json'};const boundary='leitner'+Date.now();const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+json+'\r\n--'+boundary+'--\r\n';const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'multipart/related; boundary='+boundary},body:body});if(!r.ok)throw new Error('ایجاد ناموفق');const j=await r.json();return j.id}
+async function driveDownload(token,fileId){const r=await fetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media',{headers:{Authorization:'Bearer '+token}});if(!r.ok)throw new Error('دانلود ناموفق');return r.text()}
+async function syncNow(){const d=driveSettings();if(!d.clientId){toast('ابتدا Client ID را وارد کنید','error');return}try{const token=await ensureDriveToken();const json=exportStateSnapshot();await driveUpload(token,json);d.lastSyncAt=new Date().toISOString();save();toast('پشتیبان به گوگل درایو آپلود شد ✅','success')}catch(e){toast('خطا در همگام‌سازی: '+e.message,'error')}}
+async function restoreFromDrive(){const d=driveSettings();if(!d.clientId){toast('ابتدا Client ID را وارد کنید','error');return}try{const token=await ensureDriveToken();const file=await driveFindFile(token);if(!file){toast('فایل پشتیبان در ابر یافت نشد','info');return}const text=await driveDownload(token,file.id);const data=JSON.parse(text);if(!data||!data.exportedAt){toast('فایل پشتیبان معتبر نیست','error');return}if(!confirm('بازیابی از نسخه ابری ('+new Date(data.exportedAt).toLocaleString('fa-IR')+')؟ کلمات برای انتخاب آماده می‌شوند.'))return;const result=importStateSnapshot(data);if(!result.ok)toast(result.msg,'error');else toast('نسخه ابری بارگذاری شد — در مرحله انتخاب ادامه دهید','success')}catch(e){toast('خطا در بازیابی: '+e.message,'error')}}
+function disconnectDrive(){const d=driveSettings();d.connected=false;d.token='';d.tokenExpiry=0;save();toast('اتصال قطع شد','info')}
+function maybeAutoSync(){const d=driveSettings();if(!d.autoSync||!d.clientId||!d.connected)return;if(!(d.token&&d.tokenExpiry&&Date.now()<d.tokenExpiry-60000))return;(async()=>{try{const json=exportStateSnapshot();await driveUpload(d.token,json);d.lastSyncAt=new Date().toISOString();save()}catch(e){}})()}
+function checkDriveOnLoad(){const d=driveSettings();if(!d.autoSync||!d.clientId||!d.connected)return;if(!(d.token&&d.tokenExpiry&&Date.now()<d.tokenExpiry-60000))return;(async()=>{try{const file=await driveFindFile(d.token);if(!file)return;const text=await driveDownload(d.token,file.id);const data=JSON.parse(text);if(data&&data.exportedAt&&(!d.lastSyncAt||new Date(data.exportedAt)>new Date(d.lastSyncAt)))toast('نسخه جدیدی در ابر موجود است — از تنظیمات → همگام‌سازی بازیابی کنید','info')}catch(e){}})()}
+
+</script>
+<script>
+// ═══════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════
 const MS_PER_DAY=86400000;
@@ -680,6 +752,7 @@ loadFromIDB().then(function(idbData){
     save();
   }
 }).catch(function(){});
+checkDriveOnLoad();
 
 function sanitizeCard(c){
   return{id:String(c.id||uid()),word:String(c.word||'').trim(),translation:String(c.translation||'').trim(),ipa:String(c.ipa||'').trim(),category:String(c.category||'پیش‌فرض').trim(),favorite:!!c.favorite,context:String(c.context||'').trim(),
@@ -2371,7 +2444,8 @@ function bindPager(c,libPageFn,ltPageFn){c.onclick=function(e){var pgBtn=e.targe
 
 function libRowHtml(w,dueToday){
 const tier=getFrequencyTier(w.word);
-return '<tr><td><strong>'+esc(w.word)+'</strong> <button type="button" class="btn btn-ghost btn-sm" data-speak="'+esc(w.word)+'" style="padding:2px 6px;font-size:.75rem" title="شنیدن تلفظ">🔊</button>'+(w.ipa?'<br><small style="color:var(--text2)">'+esc(w.ipa)+'</small>':'')+(tier?'<br><span class="badge tier-'+tier+'" style="font-size:.6rem">'+tierLabel(tier)+'</span>':'')+'</td><td>'+esc(w.translation)+'</td><td><span class="tag">'+esc(w.category)+'</span>'+(w.favorite?' <span style="font-size:.9rem">⭐</span>':'')+'</td><td>'+(dueToday.has(w.id)?'<span class="badge badge-warning">زودترین</span>':w.box)+'</td><td>'+fmtDate(w.nextReviewDate)+'</td><td><button type="button" class="btn btn-ghost btn-sm" data-edit="'+w.id+'" aria-label="ویرایش">✏️</button><button type="button" class="btn btn-ghost btn-sm" data-fav="'+w.id+'" aria-label="'+(w.favorite?'حذف از علاقه‌مندی':'افزودن به علاقه‌مندی')+'">'+(w.favorite?'💔':'⭐')+'</button><button type="button" class="btn btn-ghost btn-sm" data-lt="'+w.id+'" aria-label="انتقال به حافظه بلندمدت">🧠</button><button type="button" class="btn btn-ghost btn-sm" data-del="'+w.id+'" aria-label="حذف" style="color:var(--danger)">🗑️</button></td></tr>'}
+const tags=(w.tags||[]).map(t=>'<span class="tag" style="font-size:.6rem;cursor:pointer" onclick="libTag=\''+esc(t)+'\';invalidateLibCache();renderLibrary(document.getElementById(\'content\'))" title="فیلتر بر اساس این برچسب">'+esc(t)+'</span>').join(' ');
+return '<tr><td><input type="checkbox" class="lib-sel" data-sel="'+w.id+'" '+(libSelected.has(w.id)?'checked':'')+' aria-label="انتخاب"></td><td><strong>'+esc(w.word)+'</strong> <button type="button" class="btn btn-ghost btn-sm" data-speak="'+esc(w.word)+'" style="padding:2px 6px;font-size:.75rem" title="شنیدن تلفظ">🔊</button>'+(w.ipa?'<br><small style="color:var(--text2)">'+esc(w.ipa)+'</small>':'')+(tier?'<br><span class="badge tier-'+tier+'" style="font-size:.6rem">'+tierLabel(tier)+'</span>':'')+'</td><td>'+esc(w.translation)+'</td><td><span class="tag">'+esc(w.category)+'</span>'+(w.favorite?' <span style="font-size:.9rem">⭐</span>':'')+'</td><td>'+(tags?tags:'<span style="color:var(--text2);font-size:.7rem">—</span>')+'</td><td>'+(dueToday.has(w.id)?'<span class="badge badge-warning">زودترین</span>':w.box)+'</td><td>'+fmtDate(w.nextReviewDate)+'</td><td><button type="button" class="btn btn-ghost btn-sm" data-edit="'+w.id+'" aria-label="ویرایش">✏️</button><button type="button" class="btn btn-ghost btn-sm" data-fav="'+w.id+'" aria-label="'+(w.favorite?'حذف از علاقه‌مندی':'افزودن به علاقه‌مندی')+'">'+(w.favorite?'💔':'⭐')+'</button><button type="button" class="btn btn-ghost btn-sm" data-lt="'+w.id+'" aria-label="انتقال به حافظه بلندمدت">🧠</button><button type="button" class="btn btn-ghost btn-sm" data-del="'+w.id+'" aria-label="حذف" style="color:var(--danger)">🗑️</button></td></tr>'}
 function libPagerHtml(total,page,pageSize){return makePagerHtml(total,page,pageSize,'lib-pg','pg')}
 function renderLibrary(c){
 const filtered=getLibFiltered();
@@ -2392,7 +2466,7 @@ if(_e<_tp-1)_ph+='<span class="lib-pg-ellipsis">…</span>';
 if(_e<_tp)_ph+='<button type="button" class="btn btn-ghost btn-sm lib-pg" onclick="libPage='+(_tp-1)+';renderLibrary(document.getElementById(\'content\'))">'+_tp+'</button>';
 _ph+='<button type="button" class="btn btn-ghost btn-sm lib-pg" onclick="libPage=Math.min('+(_tp-1)+','+(_lp+1)+');renderLibrary(document.getElementById(\'content\'))"'+(_lp>=_tp-1?' disabled':'')+'>▶</button>';
 _ph+='</div>'}
-c.innerHTML='<div class="filter-bar"><input class="input" placeholder="جستجو..." style="max-width:250px" value="'+esc(libFilter)+'" id="libSearch"><select class="input" style="max-width:180px" id="libCat"><option value="">همه دسته‌ها</option>'+S.categories.map(function(c){return '<option value="'+esc(c)+'"'+(c===libCat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select><select class="input" style="max-width:150px" id="libTagFilter"><option value="">همه برچسب‌ها</option>'+([...new Set(S.words.flatMap(w=>w.tags||[]))].sort().map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>'}).join(''))+'</select><select class="input" style="max-width:180px" id="libSort"><option value="">مرتب‌سازی</option><option value="newest"'+(libSort==='newest'?' selected':'')+'>جدیدترین</option><option value="due"'+(libSort==='due'?' selected':'')+'>زودترین مرور</option><option value="alpha"'+(libSort==='alpha'?' selected':'')+'>الفبایی</option><option value="freq"'+(libSort==='freq'?' selected':'')+'>فراوانی</option></select><button type="button" class="btn btn-sm btn-ghost" id="manageDecksBtn">🗂️ مدیریت دسته‌ها</button><span style="color:var(--text2);font-size:.85rem">'+total+' کلمه'+(total!==S.words.length?' (از '+S.words.length+')':'')+'</span></div>'+_ph+'<div class="table-wrap card"><table><thead><tr><th>کلمه</th><th>ترجمه</th><th>دسته</th><th>جعبه</th><th>مرور بعدی</th><th>عملیات</th></tr></thead><tbody>'+(pageItems.length?pageItems.map(function(w){return libRowHtml(w,dueToday)}).join(''):'<tr><td colspan="6"><div class="empty"><div class="icon">📚</div><p>نتیجه‌ای یافت نشد</p></div></td></tr>')+'</tbody></table></div>';
+c.innerHTML='<div class="filter-bar"><input class="input" placeholder="جستجو..." style="max-width:250px" value="'+esc(libFilter)+'" id="libSearch"><select class="input" style="max-width:180px" id="libCat"><option value="">همه دسته‌ها</option>'+S.categories.map(function(c){return '<option value="'+esc(c)+'"'+(c===libCat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select><select class="input" style="max-width:150px" id="libTagFilter"><option value="">همه برچسب‌ها</option>'+([...new Set(S.words.flatMap(w=>w.tags||[]))].sort().map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>'}).join(''))+'</select><select class="input" style="max-width:180px" id="libSort"><option value="">مرتب‌سازی</option><option value="newest"'+(libSort==='newest'?' selected':'')+'>جدیدترین</option><option value="due"'+(libSort==='due'?' selected':'')+'>زودترین مرور</option><option value="alpha"'+(libSort==='alpha'?' selected':'')+'>الفبایی</option><option value="freq"'+(libSort==='freq'?' selected':'')+'>فراوانی</option></select><button type="button" class="btn btn-sm btn-ghost" id="manageDecksBtn">🗂️ مدیریت دسته‌ها</button><button type="button" class="btn btn-sm btn-ghost" id="manageTagsBtn" title="مدیریت برچسب‌ها">🏷️ برچسب‌ها</button><span style="color:var(--text2);font-size:.85rem">'+total+' کلمه'+(total!==S.words.length?' (از '+S.words.length+')':'')+'</span></div><div class="bulk-bar" id="bulkBar" style="display:'+(libSelected.size?'flex':'none')+';align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--accent-glow);border:1px solid var(--accent);border-radius:12px;margin-bottom:12px"><span style="font-size:.85rem;font-weight:600;color:var(--accent)" id="bulkCount">'+libSelected.size+' انتخاب</span><button type="button" class="btn btn-sm btn-primary" id="bulkAddTag">🏷️ افزودن برچسب</button><button type="button" class="btn btn-sm btn-ghost" id="bulkRemoveTag">♻️ حذف برچسب</button><button type="button" class="btn btn-sm btn-ghost" id="bulkClear">✕ پاک کردن انتخاب</button></div>'+_ph+'<div class="table-wrap card"><table><thead><tr><th style="width:28px"><input type="checkbox" id="libSelAll" style="accent-color:var(--accent)" aria-label="انتخاب همه صفحه"></th><th>کلمه</th><th>ترجمه</th><th>دسته</th><th>برچسب‌ها</th><th>جعبه</th><th>مرور بعدی</th><th>عملیات</th></tr></thead><tbody>'+(pageItems.length?pageItems.map(function(w){return libRowHtml(w,dueToday)}).join(''):'<tr><td colspan="6"><div class="empty"><div class="icon">📚</div><p>نتیجه‌ای یافت نشد</p></div></td></tr>')+'</tbody></table></div>';
 document.getElementById('libSearch').oninput=function(e){clearTimeout(_libSearchTimer);_libSearchTimer=setTimeout(function(){libFilter=e.target.value;libPage=0;invalidateLibCache();renderLibrary(c);var si=document.getElementById('libSearch');if(si){si.focus();si.selectionStart=si.selectionEnd=si.value.length}},250)};
 document.getElementById('libCat').onchange=function(e){libCat=e.target.value;libPage=0;invalidateLibCache();renderLibrary(c)};
 document.getElementById('libTagFilter').onchange=function(e){libTag=e.target.value;libPage=0;invalidateLibCache();renderLibrary(c)};
@@ -2407,6 +2481,14 @@ if(btn.dataset.lt){var w=S.words.find(function(x){return x.id===id});if(w){S.wor
 if(btn.dataset.edit)editWord(id)};
 var manageBtn=document.getElementById('manageDecksBtn');
 if(manageBtn)manageBtn.onclick=function(){showDeckManager()};
+var tagsBtn=document.getElementById('manageTagsBtn');
+if(tagsBtn)tagsBtn.onclick=function(){openTagManager()};
+var selAll=document.getElementById('libSelAll');
+if(selAll)selAll.onchange=function(){c.querySelectorAll('.lib-sel').forEach(function(cb){if(cb.checked!==selAll.checked){cb.checked=selAll.checked;toggleLibSelect(cb.dataset.sel)}});updateBulkBar(c)};
+c.querySelectorAll('.lib-sel').forEach(function(cb){cb.onchange=function(){toggleLibSelect(cb.dataset.sel);updateBulkBar(c)}});
+var bAdd=document.getElementById('bulkAddTag');if(bAdd)bAdd.onclick=function(){bulkAddTagPrompt()};
+var bRem=document.getElementById('bulkRemoveTag');if(bRem)bRem.onclick=function(){bulkRemoveTagPrompt()};
+var bClr=document.getElementById('bulkClear');if(bClr)bClr.onclick=function(){libSelected.clear();updateBulkBar(c);invalidateLibCache();renderLibrary(c)};
 }
 // DECK MANAGEMENT
 // ═══════════════════════════════════════════
@@ -2828,7 +2910,7 @@ return`<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12p
     <div id="custom-pack-status" style="margin-top:8px;font-size:.82rem"></div>
   </div>
 </div>
-<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div><div class="card" style="margin-bottom:16px;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(162,155,254,.05))"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><span style="font-size:1.8rem">⚒️</span><div><h3 style="color:var(--accent);margin-bottom:2px">VocabForge — سازنده فلشکارت</h3><p style="font-size:.82rem;color:var(--text2)">کلمات را از PDF/DOCX استخراج، غنیسازی و ترجمه کنید و مستقیماً به لایتنر وارد کنید.</p></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-primary btn-sm" onclick="navigateTo('vocabforge')">⚒️ باز کردن وکب فورج</button><span style="font-size:.78rem;color:var(--text2);display:flex;align-items:center">فلش‌کارت بسازید و مستقیم به لایتنر بفرستید — یا فایل JSON خروجی آن را همین‌جا وارد کنید</span></div></div>`}
+<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px;color:var(--accent)">⚡ افزودن سریع کلمات</h3><p style="color:var(--text2);font-size:.85rem;margin-bottom:12px">کلمات را هر خط یکی وارد کنید (فرمت: word یا word=ترجمه)</p><textarea id="quickImportText" class="input" rows="4" placeholder="hello=سلام&#10;world=دنیا&#10;book&#10;water=آب" style="width:100%;resize:vertical;font-family:monospace"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="quickImportBtn">افزودن کلمات</button><button type="button" class="btn btn-ghost btn-sm" id="quickImportClearBtn">پاک کردن</button></div><div id="quickImportResult" style="margin-top:10px"></div></div></div>`}
 
 function renderSelectableTextSection(){
 if(!textRenderedWords.length){
@@ -5503,18 +5585,18 @@ let questionHtml='';
 if(quizMode==='mcq'){
   questionHtml=`<div style="font-size:1.6rem;font-weight:700">${esc(q.word)}</div></div><div id="quizContainer" style="display:grid;gap:10px">${quizState.options.map((o,i)=>{let cls='btn btn-ghost quiz-option';let st='';if(quizState.answered){if(i===quizState.selected){cls+=o===q.translation?' correct':' wrong'}else if(o===q.translation){cls+=' correct';st='opacity:.7'}}return`<button type="button" class="${cls}" data-qi="${i}" style="justify-content:center;${st}" ${quizState.answered?'disabled':''}>${esc(o)}</button>`}).join('')}</div>`;
 }else if(quizMode==='fill'){
-  questionHtml=`<div style="font-size:1.6rem;font-weight:700;margin-bottom:16px">${esc(q.word)}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="ترجمه را تایپ کنید..." ${quizState.answered?'disabled':''}><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
+  questionHtml=`<div style="font-size:1.6rem;font-weight:700;margin-bottom:16px">${esc(q.word)}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="ترجمه را تایپ کنید..." ${quizState.answered?'disabled':''}><div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizSubmitBtn" ${quizState.answered?'disabled':''}>✓ تایید پاسخ</button></div><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
 }else if(quizMode==='reverse'){
   questionHtml=`<div style="font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:8px">${esc(q.translation)}</div><div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">کدام کلمه انگلیسی است؟</div></div><div id="quizContainer" style="display:grid;gap:10px">${quizState.options.map((o,i)=>{let cls='btn btn-ghost quiz-option';let st='';if(quizState.answered){if(i===quizState.selected){cls+=o===q.word?' correct':' wrong'}else if(o===q.word){cls+=' correct';st='opacity:.7'}}return`<button type="button" class="${cls}" data-qi="${i}" style="justify-content:center;${st}" ${quizState.answered?'disabled':''}>${esc(o)}</button>`}).join('')}</div>`;
 }else if(quizMode==='listen'){
-  questionHtml=`<button type="button" class="btn btn-ghost" id="quizListenBtn" style="font-size:2rem;margin-bottom:16px">🔊</button><div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">آنچه می‌شنوید را تایپ کنید</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه را تایپ کنید..." ${quizState.answered?'disabled':''}><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
+  questionHtml=`<button type="button" class="btn btn-ghost" id="quizListenBtn" style="font-size:2rem;margin-bottom:16px">🔊</button><div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">آنچه می‌شنوید را تایپ کنید</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه را تایپ کنید..." ${quizState.answered?'disabled':''}><div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizSubmitBtn" ${quizState.answered?'disabled':''}>✓ تایید پاسخ</button></div><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
 }else if(quizMode==='antonym'){
   questionHtml=`<div style="font-size:1.2rem;color:var(--text2);margin-bottom:8px">کدام کلمه متضاد <strong style="color:var(--accent)">${esc(q.word)}</strong> است؟</div></div><div id="quizContainer" style="display:grid;gap:10px">${quizState.options.map((o,i)=>{let cls='btn btn-ghost quiz-option';let st='';if(quizState.answered){if(i===quizState.selected){cls+=o===quizState.quizText?' correct':' wrong'}else if(o===quizState.quizText){cls+=' correct';st='opacity:.7'}}return`<button type="button" class="${cls}" data-qi="${i}" style="justify-content:center;${st}" ${quizState.answered?'disabled':''}>${esc(o)}</button>`}).join('')}</div>`;
 }else if(quizMode==='sentfill'){
-  questionHtml=`<div style="font-size:1rem;line-height:1.8;margin-bottom:16px">${esc(quizState.quizText||'')}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه مناسب را تایپ کنید..." ${quizState.answered?'disabled':''}><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
+  questionHtml=`<div style="font-size:1rem;line-height:1.8;margin-bottom:16px">${esc(quizState.quizText||'')}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه مناسب را تایپ کنید..." ${quizState.answered?'disabled':''}><div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizSubmitBtn" ${quizState.answered?'disabled':''}>✓ تایید پاسخ</button></div><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
 }else if(quizMode==='spell'){
   const scrambled=q.word.split('').sort(()=>Math.random()-.5).join('');
-  questionHtml=`<button type="button" class="btn btn-ghost" id="quizListenBtn" style="font-size:2rem;margin-bottom:8px">🔊</button><div style="font-size:.85rem;color:var(--text2);margin-bottom:4px">ترجمه: <strong style="color:var(--accent)">${esc(q.translation)}</strong></div><div style="font-size:1.1rem;letter-spacing:4px;margin-bottom:16px;color:var(--text2);font-weight:600">${esc(scrambled)}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه صحیح را تایپ کنید..." ${quizState.answered?'disabled':''}><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
+  questionHtml=`<button type="button" class="btn btn-ghost" id="quizListenBtn" style="font-size:2rem;margin-bottom:8px">🔊</button><div style="font-size:.85rem;color:var(--text2);margin-bottom:4px">ترجمه: <strong style="color:var(--accent)">${esc(q.translation)}</strong></div><div style="font-size:1.1rem;letter-spacing:4px;margin-bottom:16px;color:var(--text2);font-weight:600">${esc(scrambled)}</div><input type="text" class="quiz-input" id="quizFillInput" placeholder="کلمه صحیح را تایپ کنید..." ${quizState.answered?'disabled':''}><div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizSubmitBtn" ${quizState.answered?'disabled':''}>✓ تایید پاسخ</button></div><div id="quizFillFeedback" style="margin-top:12px" aria-live="assertive" role="alert"></div></div>`;
 }else if(quizMode==='defmatch'){
   questionHtml=`<div style="font-size:1rem;line-height:1.8;margin-bottom:16px;color:var(--accent);font-style:italic">${esc(quizState.quizText||q.coreMeaning||q.translation)}</div></div><div id="quizContainer" style="display:grid;gap:10px">${quizState.options.map((o,i)=>{let cls='btn btn-ghost quiz-option';let st='';if(quizState.answered){if(i===quizState.selected){cls+=o===q.word?' correct':' wrong'}else if(o===q.word){cls+=' correct';st='opacity:.7'}}return`<button type="button" class="${cls}" data-qi="${i}" style="justify-content:center;${st}" ${quizState.answered?'disabled':''}>${esc(o)}</button>`}).join('')}</div>`;
 }else if(quizMode==='speed'){
@@ -5528,7 +5610,7 @@ if(S.quizStats&&S.quizStats.sessions.length>0){
   historyHtml=`<div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;text-align:right"><div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">آخرین نتایج:</div>${recent.map(s=>{const pct=s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;return`<div style="font-size:.75rem;color:var(--text);margin-bottom:2px">✓ ${s.correct} / ✗ ${s.wrong} (${pct}%) — ${new Date(s.date).toLocaleDateString('fa-IR')}</div>`}).join('')}</div>`;
 }
 
-c.innerHTML=`<div style="max-width:500px;margin:0 auto"><div class="card" style="text-align:center;margin-bottom:16px;padding:16px"><div style="color:var(--text2);font-size:.85rem;margin-bottom:8px">${quizMode==='reverse'?'ترجمه کدام کلمه است؟':quizMode==='antonym'?'کدام متضاد است؟':quizMode==='defmatch'?'کدام کلمه با تعریف مطابقت دارد؟':quizMode==='speed'?'⚡ ۵ ثانیه وقت داری!':'ترجمه کدام گزینه درست است؟'}</div>${typeBar}<div class="card" style="text-align:center;padding:16px">${questionHtml}</div>${quizState.answered?`<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizNext">سوال بعدی</button><button type="button" class="btn btn-ghost" id="quizUndo" style="font-size:.8rem">↩️ لغو پاسخ <span id="undoCountdown" style="color:var(--warning);font-size:.7rem"></span></button></div>`:''}<div style="text-align:center;margin-top:16px;color:var(--text2);font-size:.85rem">آمار: <span style="color:var(--success)">✓ ${quizCorrect}</span> / <span style="color:var(--danger)">✗ ${quizWrong}</span> | منبع: ${valid.length} کلمه</div>${historyHtml}</div>`;
+c.innerHTML=`<div style="max-width:500px;margin:0 auto"><div class="card" style="text-align:center;margin-bottom:16px;padding:16px"><div style="color:var(--text2);font-size:.85rem;margin-bottom:8px">${quizMode==='reverse'?'ترجمه کدام کلمه است؟':quizMode==='antonym'?'کدام متضاد است؟':quizMode==='defmatch'?'کدام کلمه با تعریف مطابقت دارد؟':quizMode==='speed'?'⚡ ۵ ثانیه وقت داری!':'ترجمه کدام گزینه درست است؟'}</div>${quizState.card&&quizState.card.word&&isAdaptiveQuiz()?`<div style="font-size:.7rem;color:var(--text2);margin-bottom:6px">سختی: ${quizStrengthLabel(quizState.card)}</div>`:''}${typeBar}<div class="card" style="text-align:center;padding:16px">${questionHtml}</div>${quizState.answered?`<div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="quizNext">سوال بعدی</button><button type="button" class="btn btn-ghost" id="quizUndo" style="font-size:.8rem">↩️ لغو پاسخ <span id="undoCountdown" style="color:var(--warning);font-size:.7rem"></span></button></div>`:''}<div style="text-align:center;margin-top:16px;color:var(--text2);font-size:.85rem">آمار: <span style="color:var(--success)">✓ ${quizCorrect}</span> / <span style="color:var(--danger)">✗ ${quizWrong}</span> | منبع: ${valid.length} کلمه</div>${historyHtml}</div>`;
 
 if(quizState.answered){
   const nextBtn=document.getElementById('quizNext');
@@ -5556,7 +5638,9 @@ c.querySelectorAll('[data-qmode]').forEach(btn=>{
 // Fill-in-the-blank submit
 if(['fill','listen','sentfill','spell'].includes(quizMode)&&!quizState.answered){
   const input=document.getElementById('quizFillInput');
-  if(input){input.focus();input.onkeydown=(e)=>{if(e.key==='Enter')checkFillAnswer()}}}
+  if(input){input.focus();input.onkeydown=(e)=>{if(e.key==='Enter')checkFillAnswer()}}
+  const submitBtn=document.getElementById('quizSubmitBtn');
+  if(submitBtn)submitBtn.onclick=()=>checkFillAnswer()}
 
 // Speed mode timer
 if(quizMode==='speed'&&!quizState.answered){
@@ -5772,8 +5856,10 @@ const valid=S.words.filter(w=>w.translation&&w.translation.trim());
 if(valid.length<4)return;
 
 // Weighted selection: weaker words appear more often, skip session-skipped
+const adaptive=isAdaptiveQuiz();
 const weights=valid.map(w=>{
   if(shouldSkipInSession(w.id))return 0;
+  if(!adaptive)return 1;
   const strength=getWordStrength(w);
   const inHistory=quizHistory.includes(w.id);
   return Math.max(0.1,(1-strength+0.1)*(inHistory?0.2:1));
@@ -7919,6 +8005,7 @@ h+='<div><label style="display:block;font-size:.85rem;color:var(--text2);margin-
 h+='<select class="input" id="setQuizCount"><option value="10"'+((s.quizCount||10)===10?' selected':'')+'>۱۰</option><option value="20"'+(s.quizCount===20?' selected':'')+'>۲۰</option><option value="30"'+(s.quizCount===30?' selected':'')+'>۳۰</option><option value="50"'+(s.quizCount===50?' selected':'')+'>۵۰</option></select></div>';
 h+='<div class="flex"><label style="font-size:.85rem;color:var(--text2)">نمایش پاسخ فوری</label><input type="checkbox" id="setQuizInstant"'+(s.quizInstantFeedback?' checked':'')+' style="accent-color:var(--accent)"></div>';
 h+='<div class="flex"><label style="font-size:.85rem;color:var(--text2)">آزمون فقط کلمات ناشناخته</label><input type="checkbox" id="setQuizUnknownOnly"'+(s.quizUnknownOnly?' checked':'')+' style="accent-color:var(--accent)"></div>';
+h+='<div class="flex"><label style="font-size:.85rem;color:var(--text2)">آزمون تطبیقی (سؤال بیشتر از کلمات سخت‌تر)</label><input type="checkbox" id="setQuizAdaptive"'+(s.quizAdaptive!==false?' checked':'')+' style="accent-color:var(--accent)"></div>';
 h+='</div></div>';
 // ── Notification ──
 h+='<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:16px">🔔 یادآوری روزانه</h3>';
@@ -7967,11 +8054,21 @@ shortcuts.forEach(function(s){
   h+='<div style="color:var(--text2)">'+s[1]+'</div>';
 });
 h+='</div></div>';
+// ── Google Drive Sync ──
+var drv=driveSettings();
+h+='<div class="card" style="margin-bottom:16px"><h3 style="margin-bottom:12px">☁️ همگام‌سازی گوگل درایو</h3>';
+h+='<p style="color:var(--text2);font-size:.82rem;line-height:1.8;margin-bottom:10px">پشتیبان خودکار داده‌ها در فضای خصوصی گوگل درایو (AppData). برای اتصال، یک Client ID از کنسول گوگل بسازید:</p>';
+h+='<ol style="color:var(--text2);font-size:.8rem;line-height:2;margin-bottom:12px;padding-right:18px"><li>در <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a> یک پروژه بسازید.</li><li>«OAuth consent screen» را با نوع External پیکربندی کنید و ایمیل خود را به عنوان Test user اضافه کنید.</li><li>یک «OAuth Client ID» از نوع Web application بسازید و این آدرس‌ها را در Authorized JavaScript origins وارد کنید: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.72rem" dir="ltr">https://mohsen-niksirat.github.io</code> و <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.72rem" dir="ltr">http://127.0.0.1:8745</code></li><li>Client ID را در کادر زیر وارد کنید.</li></ol>';
+h+='<div style="display:flex;gap:8px;margin-bottom:12px"><input class="input" id="driveClientId" placeholder="Client ID گوگل (مثل 1234-xxxx.apps.googleusercontent.com)" value="'+esc(drv.clientId||'243214315942-89m2u9u2kdvkmjr95cjeq24kkhqt2k7s.apps.googleusercontent.com')+'" style="flex:1;font-size:.78rem" dir="ltr"><button type="button" class="btn btn-sm btn-primary" id="driveConnectBtn">'+(drv.connected?'🔁 اتصال مجدد':'🔗 اتصال')+'</button></div>';
+if(drv.connected)h+='<div style="font-size:.78rem;color:var(--success);margin-bottom:10px">✅ متصل است'+(drv.lastSyncAt?' — آخرین همگام: '+new Date(drv.lastSyncAt).toLocaleString('fa-IR'):'')+'</div>';
+h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn btn-sm btn-ghost" id="driveSyncNowBtn">📤 پشتیبان‌گیری الان</button><button type="button" class="btn btn-sm btn-ghost" id="driveRestoreBtn">📥 بازیابی از ابر</button><button type="button" class="btn btn-sm btn-ghost" id="driveDisconnectBtn" style="color:var(--danger)">⛔ قطع اتصال</button></div>';
+h+='<div class="flex"><label style="font-size:.85rem;color:var(--text2)">همگام‌سازی خودکار هنگام هر ذخیره</label><input type="checkbox" id="driveAutoSync"'+(drv.autoSync?' checked':'')+' style="accent-color:var(--accent)"></div>';
+h+='</div>';
 // ── Storage & Security ──
 h+='<div class="card"><h3 style="margin-bottom:12px">💾 ذخیره‌سازی و امنیت</h3>';
 h+='<p style="color:var(--text2);font-size:.85rem;line-height:1.8">داده‌ها در مرورگر شما ذخیره می‌شوند و هرگز به سرور ارسال نمی‌شوند. پشتیبان خودکار در IndexedDB نگهداری می‌شود. حریم خصوصی شما کاملاً حفظ می‌شود.</p>';
 h+='<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;font-size:.8rem;color:var(--text2)">';
-h+='<div>📦 نسخه: <strong>۳.۸.۲</strong></div>';
+h+='<div>📦 نسخه: <strong>۴.۰</strong></div>';
 h+='<div>💾 حجم داده: <strong>'+dataSize+' KB</strong></div>';
 h+='<div>📊 کل کلمات: <strong>'+(S.words.length+S.longTerm.length)+'</strong></div>';
 h+='<div>🕐 آخرین مرور: <strong>'+(S.stats.lastReviewDate?fmtDate(S.stats.lastReviewDate):'—')+'</strong></div>';
@@ -8000,6 +8097,7 @@ tmplItems.forEach(function(item){
 document.getElementById('setQuizCount').onchange=function(e){S.settings.quizCount=parseInt(e.target.value);save()};
 document.getElementById('setQuizInstant').onchange=function(e){S.settings.quizInstantFeedback=e.target.checked;save()};
 document.getElementById('setQuizUnknownOnly').onchange=function(e){S.settings.quizUnknownOnly=e.target.checked;save()};
+var qAdapt=document.getElementById('setQuizAdaptive');if(qAdapt)qAdapt.onchange=function(e){S.settings.quizAdaptive=e.target.checked;save()};
 // Accessibility
 document.getElementById('setFontSize').onchange=function(e){S.settings.fontSize=e.target.value;document.documentElement.setAttribute('data-fontsize',e.target.value);save()};
 document.getElementById('setHighContrast').onchange=function(e){
@@ -8019,6 +8117,19 @@ document.getElementById('setNotif').onchange=async function(e){
   }else{S.settings.notifications=false;save()}
 };
 document.getElementById('setNotifTime').onchange=function(e){S.settings.notificationTime=e.target.value;save()};
+// Google Drive bindings
+var dCl=document.getElementById('driveClientId');
+if(dCl)dCl.onchange=function(e){var d=driveSettings();d.clientId=e.target.value.trim();if(d.clientId&&!d.connected){d.connected=true;save();toast('Client ID ذخیره شد — برای همگام روی «اتصال» بزنید','success')}else save()};
+var dCn=document.getElementById('driveConnectBtn');
+if(dCn)dCn.onclick=function(){var d=driveSettings();if(!document.getElementById('driveClientId').value.trim()){toast('ابتدا Client ID را وارد کنید','error');return}loadGisLib().then(function(){ensureDriveToken().then(function(){renderSettings(c)}).catch(function(e){})}).catch(function(e){toast(e.message,'error')})};
+var dSn=document.getElementById('driveSyncNowBtn');
+if(dSn)dSn.onclick=function(){syncNow()};
+var dRs=document.getElementById('driveRestoreBtn');
+if(dRs)dRs.onclick=function(){restoreFromDrive()};
+var dDs=document.getElementById('driveDisconnectBtn');
+if(dDs)dDs.onclick=function(){disconnectDrive();renderSettings(c)};
+var dAs=document.getElementById('driveAutoSync');
+if(dAs)dAs.onchange=function(e){driveSettings().autoSync=e.target.checked;save();toast(e.target.checked?'همگام‌سازی خودکار فعال شد':'همگام‌سازی خودکار غیرفعال شد','info')};
 // Category management
 document.getElementById('addCatBtn').onclick=function(){
   var input=document.getElementById('newCatInput');
